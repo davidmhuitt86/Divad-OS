@@ -1,0 +1,18 @@
+{
+  "id": "53431316-e315-41bb-8987-5fad0b2bfb81",
+  "type": "apo",
+  "title": "Objective 2: Establish Engineering Discipline Framework",
+  "description": "Document and standardize key engineering processes, including the AP/APM/APO/APT hierarchy, decision records, and the operational briefing/AAR pattern.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "phase-1",
+    "engineering-discipline"
+  ],
+  "priority": "high",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": "aaef1769-ee9a-4c7a-8d46-4e70ed1ea83c",
+  "created_at": "2026-06-27T11:23:45.637Z",
+  "updated_at": "2026-06-27T11:23:45.637Z"
+}
