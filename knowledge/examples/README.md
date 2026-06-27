@@ -1,0 +1,3 @@
+# examples
+
+Purpose: knowledge/examples

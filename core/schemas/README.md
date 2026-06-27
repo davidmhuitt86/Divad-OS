@@ -1,0 +1,3 @@
+# schemas
+
+Purpose: core/schemas

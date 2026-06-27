@@ -1,0 +1,3 @@
+# editor
+
+Purpose: os/editor

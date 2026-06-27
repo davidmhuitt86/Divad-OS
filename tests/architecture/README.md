@@ -1,0 +1,3 @@
+# architecture
+
+Purpose: tests/architecture

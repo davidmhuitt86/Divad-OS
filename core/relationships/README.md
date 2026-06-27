@@ -1,0 +1,3 @@
+# relationships
+
+Purpose: core/relationships

@@ -1,0 +1,3 @@
+# search
+
+Purpose: core/search

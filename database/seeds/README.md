@@ -1,0 +1,3 @@
+# seeds
+
+Purpose: database/seeds

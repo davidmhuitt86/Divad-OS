@@ -1,0 +1,3 @@
+# whitepapers
+
+Purpose: docs/whitepapers

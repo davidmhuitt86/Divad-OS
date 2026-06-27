@@ -1,0 +1,3 @@
+# migrations
+
+Purpose: database/migrations

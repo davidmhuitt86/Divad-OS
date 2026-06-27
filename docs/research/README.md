@@ -1,0 +1,3 @@
+# research
+
+Purpose: docs/research
