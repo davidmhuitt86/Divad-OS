@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Search, Bell } from 'lucide-react'
 import { useStore } from '../../store'
+import CreateMenu from '../wizard/CreateMenu'
 
 export default function Header() {
   const { appState, searchQuery, setSearchQuery, runSearch } = useStore()
@@ -57,6 +58,7 @@ export default function Header() {
 
       {/* Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <CreateMenu />
         <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex' }}>
           <Bell size={15} />
         </button>

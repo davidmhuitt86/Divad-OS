@@ -1,4 +1,4 @@
-import type { EKEObject } from '../../shared/types'
+﻿import type { EKEObject } from '../../../shared/types'
 
 
 interface Props { objects: EKEObject[] }
@@ -10,11 +10,11 @@ export default function KnowledgeStatCards({ objects }: Props) {
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, flexShrink: 0 }}>
-      <StatCard label="Knowledge Objects" value={total > 0 ? total.toLocaleString() : '—'} delta="+128 this week" color="#a855f7" icon="◈" />
-      <StatCard label="Concepts (Nodes)"  value="—" delta="+74 this week"  color="#3b82f6" icon="⬡" />
-      <StatCard label="Relationships (Edges)" value="—" delta="+312 this week" color="#06b6d4" icon="⤢" />
-      <StatCard label="Sources"           value="—" delta="+9 this week"   color="#f59e0b" icon="📖" />
-      <StatCard label="Avg. Confidence"   value="—" delta="↑4% this week"  color="#22c55e" icon="%" ring />
+      <StatCard label="Knowledge Objects" value={total > 0 ? total.toLocaleString() : 'â€”'} delta="+128 this week" color="#a855f7" icon="â—ˆ" />
+      <StatCard label="Concepts (Nodes)"  value="â€”" delta="+74 this week"  color="#3b82f6" icon="â¬¡" />
+      <StatCard label="Relationships (Edges)" value="â€”" delta="+312 this week" color="#06b6d4" icon="â¤¢" />
+      <StatCard label="Sources"           value="â€”" delta="+9 this week"   color="#f59e0b" icon="ðŸ“–" />
+      <StatCard label="Avg. Confidence"   value="â€”" delta="â†‘4% this week"  color="#22c55e" icon="%" ring />
       {/* Health */}
       <div style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(6,182,212,0.06))', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 8, padding: '10px 12px' }}>
         <div style={{ fontSize: 9, fontWeight: 600, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Knowledge Health</div>
@@ -48,3 +48,4 @@ function StatCard({ label, value, delta, color, icon, ring }: {
     </div>
   )
 }
+

@@ -19,12 +19,12 @@ export default function Home() {
 
     const isElectron = typeof window !== 'undefined' && !!window.divadOS
     if (isElectron) {
-      window.divadOS.graph.snapshot().then(setGraphData)
+      window.divadOS.graph.snapshot().then(d => setGraphData(d as { nodes: EKEObject[]; edges: { source_id: string; target_id: string }[] }))
       const unsubActivity = window.divadOS.on('activity:new', () => loadActivity())
       const unsubState = window.divadOS.on('state:refresh', () => {
         loadAppState()
         loadObjects()
-        window.divadOS.graph.snapshot().then(setGraphData)
+        window.divadOS.graph.snapshot().then(d => setGraphData(d as { nodes: EKEObject[]; edges: { source_id: string; target_id: string }[] }))
       })
       return () => { unsubActivity(); unsubState() }
     }

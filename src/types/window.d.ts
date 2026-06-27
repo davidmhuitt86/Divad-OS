@@ -21,7 +21,23 @@ interface DivadOSApi {
   graph: {
     snapshot: () => Promise<{ nodes: EKEObject[]; edges: unknown[] }>
   }
+  config: {
+    get: (key: string) => Promise<string | null>
+    set: (key: string, value: string) => Promise<void>
+  }
+  github: {
+    connectTest:  (cfg: GitHubCfg) => Promise<{ ok: boolean; error?: string }>
+    sync:         (cfg: GitHubCfg) => Promise<{ success: boolean; pushed?: number; pulled?: number; errors?: string[]; syncedAt?: string; error?: string }>
+    lastSync:     () => Promise<string | null>
+    configGet:    () => Promise<{ url: string | null; branch: string | null }>
+    configSave:   (cfg: GitHubCfg) => Promise<{ success: boolean }>
+  }
   on: (channel: string, cb: (...args: unknown[]) => void) => () => void
+}
+
+interface GitHubCfg {
+  url: string
+  branch: string
 }
 
 declare global {

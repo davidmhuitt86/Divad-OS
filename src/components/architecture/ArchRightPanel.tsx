@@ -110,7 +110,7 @@ export default function ArchRightPanel({ objects, activity }: Props) {
         ) : recentAct.map(ev => (
           <div key={ev.id} style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
             <div style={{ width: 22, height: 22, borderRadius: 4, background: '#1a1e28', border: '1px solid #222736', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 9, color: '#475569' }}>
-              {ev.action?.[0]?.toUpperCase() ?? '?'}
+              {ev.event_type?.[0]?.toUpperCase() ?? '?'}
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 11, color: '#94a3b8' }}>{ev.summary}</div>

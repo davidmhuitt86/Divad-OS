@@ -22,7 +22,7 @@ const TYPE_ICON: Record<string, string> = {
 const PAGE_SIZE = 10
 
 export default function Objects() {
-  const { objects } = useStore()
+  const { objects, openObject } = useStore()
   const [search, setSearch]         = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -156,7 +156,7 @@ export default function Objects() {
                   {objects.length === 0 ? 'No objects in database yet' : 'No objects match the current filters'}
                 </td></tr>
               ) : pageItems.map(obj => (
-                <tr key={obj.id} onClick={() => setSelected(obj)}
+                <tr key={obj.id} onClick={() => setSelected(obj)} onDoubleClick={() => openObject(obj)}
                   style={{ borderBottom: '1px solid #1a1e2866', cursor: 'pointer', background: selected?.id === obj.id ? 'rgba(59,130,246,0.05)' : 'transparent' }}
                   onMouseEnter={e => { if (selected?.id !== obj.id) (e.currentTarget as HTMLElement).style.background = '#13161e' }}
                   onMouseLeave={e => { if (selected?.id !== obj.id) (e.currentTarget as HTMLElement).style.background = 'transparent' }}>

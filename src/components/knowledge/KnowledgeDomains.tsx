@@ -1,4 +1,4 @@
-import type { EKEObject } from '../../shared/types'
+﻿import type { EKEObject } from '../../../shared/types'
 
 interface Props { objects: EKEObject[] }
 
@@ -91,13 +91,13 @@ export default function KnowledgeDomains({ objects }: Props) {
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569' }}>Knowledge Insights</span>
         </div>
         <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <InsightRow icon="🔗" label="Most Referenced Object"
-            title={topParentObj?.title ?? '—'}
+          <InsightRow icon="ðŸ”—" label="Most Referenced Object"
+            title={topParentObj?.title ?? 'â€”'}
             sub={topParent ? `Referenced by ${topParent[1]} object${topParent[1] === 1 ? '' : 's'}` : 'No references found'} />
-          <InsightRow icon="📈" label="Fastest Growing Type (7 days)"
-            title={fastestType ? (TYPE_LABEL[fastestType[0]] ?? fastestType[0]) : '—'}
+          <InsightRow icon="ðŸ“ˆ" label="Fastest Growing Type (7 days)"
+            title={fastestType ? (TYPE_LABEL[fastestType[0]] ?? fastestType[0]) : 'â€”'}
             sub={fastestType ? `+${fastestType[1]} this week` : 'No new objects this week'} />
-          <InsightRow icon="📊" label="Total Objects"
+          <InsightRow icon="ðŸ“Š" label="Total Objects"
             title={String(objects.length)}
             sub={`Across ${sorted.length} type${sorted.length !== 1 ? 's' : ''}`} />
         </div>
@@ -118,3 +118,4 @@ function InsightRow({ icon, label, title, sub }: { icon: string; label: string; 
     </div>
   )
 }
+

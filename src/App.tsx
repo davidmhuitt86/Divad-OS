@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Sidebar from './components/layout/Sidebar'
 import Header from './components/layout/Header'
 import Home from './pages/Home'
@@ -6,7 +7,13 @@ import Architecture from './pages/Architecture'
 import Repository from './pages/Repository'
 import Knowledge from './pages/Knowledge'
 import Objects from './pages/Objects'
-import Placeholder from './pages/Placeholder'
+import Workspace from './pages/Workspace'
+import Reports from './pages/Reports'
+import Calendar from './pages/Calendar'
+import Settings from './pages/Settings'
+import CreationWizard from './components/wizard/CreationWizard'
+import ObjectViewer from './components/objects/ObjectViewer'
+import UserGuide, { hasAcceptedGuide } from './components/onboarding/UserGuide'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useStore } from './store'
 
@@ -18,16 +25,21 @@ function ActivePage({ page }: { page: string }) {
     case 'repository':   return <Repository />
     case 'knowledge':    return <Knowledge />
     case 'objects':      return <Objects />
-    case 'workspace':    return <Placeholder title="Workspace" />
-    case 'reports':      return <Placeholder title="Reports" />
-    case 'calendar':     return <Placeholder title="Calendar" />
-    case 'settings':     return <Placeholder title="Settings" />
+    case 'workspace':    return <Workspace />
+    case 'reports':      return <Reports />
+    case 'calendar':     return <Calendar />
+    case 'settings':     return <Settings />
     default:             return <Operations />
   }
 }
 
 export default function App() {
   const { activePage } = useStore()
+  const [guideAccepted, setGuideAccepted] = useState(() => hasAcceptedGuide())
+
+  if (!guideAccepted) {
+    return <UserGuide onAccepted={() => setGuideAccepted(true)} />
+  }
 
   return (
     <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', background: '#0d0f14', color: '#e2e8f0', fontFamily: 'Inter, system-ui, sans-serif' }}>
@@ -40,6 +52,8 @@ export default function App() {
           </ErrorBoundary>
         </main>
       </div>
+      <CreationWizard />
+      <ObjectViewer />
     </div>
   )
 }

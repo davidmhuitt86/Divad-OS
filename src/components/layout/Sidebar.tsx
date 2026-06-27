@@ -53,8 +53,18 @@ function NavButton({ id, label, Icon, active, onClick }: {
   )
 }
 
+const QUICK_ACTION_TYPES: Record<string, string | undefined> = {
+  'New Object':       undefined,
+  'New Document':     'document',
+  'New AP / Mission': 'architecture_phase',
+  'New Task':         'task',
+  'New Decision':     'decision',
+  'Upload File':      undefined,
+  'Ask AI Assistant': undefined,
+}
+
 export default function Sidebar() {
-  const { activePage, setActivePage } = useStore()
+  const { activePage, setActivePage, openWizard } = useStore()
 
   return (
     <aside style={{ width: 208, display: 'flex', flexDirection: 'column', background: '#13161e', borderRight: '1px solid #1a1e28', flexShrink: 0, overflow: 'hidden' }}>
@@ -92,6 +102,11 @@ export default function Sidebar() {
           {QUICK_ACTIONS.map(({ label, icon: Icon }) => (
             <button
               key={label}
+              onClick={() => {
+                if (label === 'Ask AI Assistant') { setActivePage('home'); return }
+                if (label === 'Upload File') return
+                openWizard(QUICK_ACTION_TYPES[label])
+              }}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: 8,
                 padding: '6px 14px', textAlign: 'left', border: 'none', cursor: 'pointer',

@@ -1,12 +1,12 @@
-import { ArrowRight } from 'lucide-react'
-import type { EKEObject } from '../../shared/types'
+﻿import { ArrowRight } from 'lucide-react'
+import type { EKEObject } from '../../../shared/types'
 
 interface Props { objects: EKEObject[] }
 
 const TYPE_ICON: Record<string, string> = {
-  document: '📄', task: '✅', knowledge_object: '◈', decision: '⚖️',
-  architecture_phase: '🏗️', requirement: '📋', risk: '⚠️', research: '🔬',
-  standard: '📏', apo: '🎯', apt: '🔧', meeting: '📅', journal: '📓',
+  document: 'ðŸ“„', task: 'âœ…', knowledge_object: 'â—ˆ', decision: 'âš–ï¸',
+  architecture_phase: 'ðŸ—ï¸', requirement: 'ðŸ“‹', risk: 'âš ï¸', research: 'ðŸ”¬',
+  standard: 'ðŸ“', apo: 'ðŸŽ¯', apt: 'ðŸ”§', meeting: 'ðŸ“…', journal: 'ðŸ““',
 }
 
 const FEATURED_TYPES = ['architecture_phase', 'apo', 'apt', 'document', 'knowledge_object']
@@ -38,11 +38,11 @@ export default function KnowledgeCenterPanels({ objects }: Props) {
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#1a1e28'}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
               <div style={{ width: 28, height: 28, borderRadius: 6, background: '#1a1e28', border: '1px solid #222736', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>
-                {TYPE_ICON[obj.type] ?? '◈'}
+                {TYPE_ICON[obj.type] ?? 'â—ˆ'}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{obj.title}</div>
-                <div style={{ fontSize: 9, color: '#475569', marginTop: 1 }}>{obj.type.replace(/_/g,' ')} · Updated {relativeTime(obj.updated_at)}</div>
+                <div style={{ fontSize: 9, color: '#475569', marginTop: 1 }}>{obj.type.replace(/_/g,' ')} Â· Updated {relativeTime(obj.updated_at)}</div>
               </div>
               <StatusDot status={obj.status} />
             </div>
@@ -68,7 +68,7 @@ export default function KnowledgeCenterPanels({ objects }: Props) {
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#1a1e28'}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
               <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>
-                {TYPE_ICON[g.type] ?? '◈'}
+                {TYPE_ICON[g.type] ?? 'â—ˆ'}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#e2e8f0' }}>{g.type.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
@@ -99,3 +99,4 @@ function relativeTime(iso: string): string {
   if (hrs < 24)  return `${hrs}h ago`
   return `${Math.floor(hrs / 24)}d ago`
 }
+

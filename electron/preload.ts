@@ -2,12 +2,12 @@ import { contextBridge, ipcRenderer } from 'electron'
 
 const api = {
   objects: {
-    list:   (opts?: { type?: string; status?: string }) => ipcRenderer.invoke('objects:list', opts),
-    get:    (id: string) => ipcRenderer.invoke('objects:get', { id }),
-    create: (data: unknown) => ipcRenderer.invoke('objects:create', data),
-    update: (id: string, changes: unknown) => ipcRenderer.invoke('objects:update', { id, ...changes as object }),
+    list:    (opts?: { type?: string; status?: string }) => ipcRenderer.invoke('objects:list', opts),
+    get:     (id: string) => ipcRenderer.invoke('objects:get', { id }),
+    create:  (data: unknown) => ipcRenderer.invoke('objects:create', data),
+    update:  (id: string, changes: unknown) => ipcRenderer.invoke('objects:update', { id, ...(changes as object) }),
     approve: (id: string, note?: string) => ipcRenderer.invoke('objects:approve', { id, note }),
-    search: (query: string) => ipcRenderer.invoke('objects:search', { query }),
+    search:  (query: string) => ipcRenderer.invoke('objects:search', { query }),
   },
   activity: {
     list: (limit?: number) => ipcRenderer.invoke('activity:list', { limit }),
@@ -20,6 +20,17 @@ const api = {
   },
   graph: {
     snapshot: () => ipcRenderer.invoke('graph:snapshot'),
+  },
+  config: {
+    get: (key: string) => ipcRenderer.invoke('config:get', { key }),
+    set: (key: string, value: string) => ipcRenderer.invoke('config:set', { key, value }),
+  },
+  github: {
+    connectTest:  (cfg: unknown) => ipcRenderer.invoke('github:connect-test', cfg),
+    sync:         (cfg: unknown) => ipcRenderer.invoke('github:sync', cfg),
+    lastSync:     () => ipcRenderer.invoke('github:last-sync'),
+    configGet:    () => ipcRenderer.invoke('github:config-get'),
+    configSave:   (cfg: unknown) => ipcRenderer.invoke('github:config-save', cfg),
   },
   on: (channel: string, cb: (...args: unknown[]) => void) => {
     ipcRenderer.on(channel, (_e, ...args) => cb(...args))
