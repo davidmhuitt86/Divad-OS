@@ -1,0 +1,18 @@
+{
+  "id": "1bfb05e9-79c5-48c6-a7aa-4edefd1f410e",
+  "type": "apo",
+  "title": "Objective 1: Define Universal Object Model",
+  "description": "Formalize the core Universal Object Model that underpins the Engineering Knowledge Engine, specifying fundamental object types, attributes, and relationships.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "phase-1",
+    "object-model"
+  ],
+  "priority": "critical",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": "aaef1769-ee9a-4c7a-8d46-4e70ed1ea83c",
+  "created_at": "2026-06-27T11:23:45.630Z",
+  "updated_at": "2026-06-27T11:23:45.630Z"
+}

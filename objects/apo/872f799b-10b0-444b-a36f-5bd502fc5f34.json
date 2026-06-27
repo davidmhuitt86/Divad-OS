@@ -1,0 +1,18 @@
+{
+  "id": "872f799b-10b0-444b-a36f-5bd502fc5f34",
+  "type": "apo",
+  "title": "Objective 3: Design Foundational Workflows",
+  "description": "Create workflow diagrams and detailed specifications for core engineering operations such as knowledge capture, revision management, decision management, and object traceability.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "phase-1",
+    "workflows"
+  ],
+  "priority": "high",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": "aaef1769-ee9a-4c7a-8d46-4e70ed1ea83c",
+  "created_at": "2026-06-27T11:23:45.645Z",
+  "updated_at": "2026-06-27T11:23:45.645Z"
+}

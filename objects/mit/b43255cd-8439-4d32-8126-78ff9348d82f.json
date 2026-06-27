@@ -1,0 +1,19 @@
+{
+  "id": "b43255cd-8439-4d32-8126-78ff9348d82f",
+  "type": "mit",
+  "title": "Draft Universal Object Model Specification",
+  "description": "Produce a draft specification for the Universal Object Model, defining core object types, attributes, and their relationships to underpin all knowledge and process modeling within the Engineering Knowledge Engine.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "mit",
+    "object-model",
+    "specification"
+  ],
+  "priority": "critical",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": "1bfb05e9-79c5-48c6-a7aa-4edefd1f410e",
+  "created_at": "2026-06-27T11:26:48.165Z",
+  "updated_at": "2026-06-27T11:26:48.165Z"
+}

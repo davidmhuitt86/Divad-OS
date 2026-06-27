@@ -1,0 +1,20 @@
+{
+  "id": "a6f9ff2b-2bf2-41f1-8280-049eeea3db5e",
+  "type": "standard",
+  "title": "Engineering Metadata Standard",
+  "description": "A universal metadata schema required for all objects in the Divad OS Engineering Knowledge Engine—ensuring consistency, traceability, and maintainability. Includes core fields (type, title, description, owner, status, priority, tags, dates, versioning, hierarchy, repository, approval, confidentiality, workflow context, revision history) and optional type-specific extensions. Revision-controlled and officially part of the Divad Canon.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "metadata",
+    "standard",
+    "canon",
+    "engineering"
+  ],
+  "priority": "critical",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-27T17:59:08.821Z",
+  "updated_at": "2026-06-27T17:59:08.821Z"
+}
