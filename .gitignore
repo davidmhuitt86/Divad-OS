@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dist-electron/
+release/
+*.env
+*.env.local
+.env*
+openaiassistantkey.env
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
