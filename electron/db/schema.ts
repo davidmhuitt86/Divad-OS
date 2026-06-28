@@ -96,9 +96,22 @@ function runMigrations(db: Database) {
       value TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS export_records (
+      id TEXT PRIMARY KEY,
+      object_id TEXT NOT NULL,
+      object_title TEXT NOT NULL,
+      format TEXT NOT NULL,
+      file_path TEXT,
+      signed_by TEXT,
+      signed_title TEXT,
+      signed_at TEXT,
+      exported_at TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_objects_type ON eke_objects(type);
     CREATE INDEX IF NOT EXISTS idx_objects_status ON eke_objects(status);
     CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log(created_at);
     CREATE INDEX IF NOT EXISTS idx_revisions_object ON revisions(object_id);
+    CREATE INDEX IF NOT EXISTS idx_exports_object ON export_records(object_id);
   `)
 }

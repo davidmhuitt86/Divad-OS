@@ -186,6 +186,39 @@ export async function setConfig(key: string, value: string) {
   await run('INSERT OR REPLACE INTO app_config (key,value) VALUES (?,?)', [key, value])
 }
 
+// ── Export Records ────────────────────────────────────────────────────────────
+
+export interface ExportRecord {
+  id: string
+  object_id: string
+  object_title: string
+  format: string
+  file_path: string | null
+  signed_by: string | null
+  signed_title: string | null
+  signed_at: string | null
+  exported_at: string
+}
+
+export async function createExportRecord(data: Omit<ExportRecord, 'id' | 'exported_at'>): Promise<ExportRecord> {
+  const record: ExportRecord = { ...data, id: randomUUID(), exported_at: now() }
+  await run(
+    `INSERT INTO export_records (id,object_id,object_title,format,file_path,signed_by,signed_title,signed_at,exported_at)
+     VALUES (?,?,?,?,?,?,?,?,?)`,
+    [record.id, record.object_id, record.object_title, record.format,
+     record.file_path, record.signed_by, record.signed_title, record.signed_at, record.exported_at]
+  )
+  persist()
+  return record
+}
+
+export async function listExportRecords(objectId: string): Promise<ExportRecord[]> {
+  return all<ExportRecord>(
+    `SELECT * FROM export_records WHERE object_id=? ORDER BY exported_at DESC LIMIT 50`,
+    [objectId]
+  )
+}
+
 // ── App State ─────────────────────────────────────────────────────────────────
 
 export async function getAppState() {

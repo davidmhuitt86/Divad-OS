@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { X, Edit2, CheckCircle, RotateCcw, Archive, Clock, Tag, User, Link2, Activity, ChevronDown, ChevronUp, Copy, ExternalLink, Plus, Trash2, Search } from 'lucide-react'
+import { X, Edit2, CheckCircle, RotateCcw, Archive, Clock, Tag, User, Link2, Activity, ChevronDown, ChevronUp, Copy, ExternalLink, Plus, Trash2, Search, Download } from 'lucide-react'
 import { useStore } from '../../store'
 import type { EKEObject, ActivityEvent, Relationship } from '../../../shared/types'
 import { TYPE_CONFIG } from '../wizard/CreationWizard'
+import ExportModal from './ExportModal'
 
 const STATUS_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   draft:      { bg: '#f59e0b11', border: '#f59e0b44', text: '#f59e0b' },
@@ -50,6 +51,7 @@ export default function ObjectViewer() {
   const [relType, setRelType] = useState('related_to')
   const [relTarget, setRelTarget] = useState<EKEObject | null>(null)
   const [relSaving, setRelSaving] = useState(false)
+  const [showExport, setShowExport] = useState(false)
 
   const obj = viewingObject
   const isElectron = typeof window !== 'undefined' && !!window.divadOS
@@ -138,6 +140,9 @@ export default function ObjectViewer() {
                 <Edit2 size={12} /> Edit
               </button>
             )}
+            <button onClick={() => setShowExport(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 11, color: '#94a3b8' }}>
+              <Download size={12} /> Export
+            </button>
             <button onClick={closeObject} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: 4 }}>
               <X size={18} />
             </button>
@@ -353,6 +358,8 @@ export default function ObjectViewer() {
           </div>
         </div>
       </div>
+
+      {showExport && <ExportModal obj={obj} onClose={() => setShowExport(false)} />}
     </div>
   )
 }
