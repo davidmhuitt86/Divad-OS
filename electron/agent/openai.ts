@@ -4,31 +4,22 @@ import { fetch, Agent } from 'undici'
 import type { AgentMessage } from '../../shared/types/index.js'
 import {
   createObject, updateObject, approveObject,
-  saveAgentMessage, listAgentMessages, logActivity, setConfig, getConfig
+  saveAgentMessage, getConfig, setConfig, logActivity,
 } from '../db/queries.js'
 
 let client: OpenAI | null = null
-let assistantId = ''
 
-export function initOpenAI(apiKey: string, asstId: string) {
-  // Node 24's native fetch has premature-close bugs with OpenAI's keep-alive.
-  // Force undici (Node 24's built-in HTTP client) with explicit keep-alive.
+export function initOpenAI(apiKey: string, _asstId: string) {
   const dispatcher = new Agent({ connections: 10, pipelining: 1 })
   const stableFetch: typeof globalThis.fetch = (input, init) =>
     fetch(input as Parameters<typeof fetch>[0], { ...init, dispatcher } as Parameters<typeof fetch>[1]) as unknown as Promise<Response>
 
-  client = new OpenAI({
-    apiKey,
-    fetch: stableFetch,
-    timeout: 60000,
-    maxRetries: 3,
-  })
-  assistantId = asstId
+  client = new OpenAI({ apiKey, fetch: stableFetch, timeout: 60000, maxRetries: 2 })
 }
 
-// ── Tool definitions (passed to the run so the assistant can call them) ───────
+// ── Tool definitions ───────────────────────────────────────────────────────────
 
-const TOOLS: OpenAI.Beta.AssistantTool[] = [
+const TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
@@ -86,21 +77,21 @@ const TOOLS: OpenAI.Beta.AssistantTool[] = [
     type: 'function',
     function: {
       name: 'set_current_focus',
-      description: 'Set the current active AP, APO, APT, or MIT shown in the dashboard header',
+      description: 'Set the active AP, APO, APT, or MIT shown in the dashboard header',
       parameters: {
         type: 'object',
         properties: {
-          ap_id:  { type: 'string', description: 'Architecture Phase object ID' },
-          apo_id: { type: 'string', description: 'Architecture Phase Objective ID' },
-          apt_id: { type: 'string', description: 'Architecture Phase Task ID' },
-          mit_id: { type: 'string', description: 'Most Important Task ID' },
+          ap_id:  { type: 'string' },
+          apo_id: { type: 'string' },
+          apt_id: { type: 'string' },
+          mit_id: { type: 'string' },
         },
       },
     },
   },
 ]
 
-// ── Tool execution ────────────────────────────────────────────────────────────
+// ── Tool execution ─────────────────────────────────────────────────────────────
 
 async function executeTool(name: string, args: Record<string, unknown>): Promise<unknown> {
   switch (name) {
@@ -117,7 +108,7 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
         parent_id: (args.parent_id as string) ?? null,
       } as Parameters<typeof createObject>[0])
       await logActivity('agent_created_object', obj, `Agent created: ${obj.title}`, 'agent')
-      return { success: true, id: obj.id, title: obj.title, status: obj.status }
+      return { success: true, id: obj.id, title: obj.title }
     }
     case 'update_object': {
       const obj = await updateObject(args.id as string, args as Parameters<typeof updateObject>[1])
@@ -141,78 +132,80 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
   }
 }
 
-// ── Thread management ─────────────────────────────────────────────────────────
+// ── Conversation history (in-memory, keyed by session) ────────────────────────
+// Persists across messages within an app session; resets on restart.
+const history: OpenAI.Chat.ChatCompletionMessageParam[] = []
 
-async function getOrCreateThread(): Promise<string> {
-  const existing = await getConfig('openai_thread_id')
-  if (existing) return existing
+const SYSTEM_PROMPT = `You are the Chief Engineer AI for Divad Technology Group's Engineering Operating System (Divad OS).
+You assist David Huitt, Chief Engineer, in managing engineering knowledge, tasks, decisions, architecture phases, and objectives.
 
-  const thread = await client!.beta.threads.create()
-  await setConfig('openai_thread_id', thread.id)
-  return thread.id
-}
+You can:
+- Create and update EKE objects (tasks, decisions, knowledge objects, architecture phases, research, meetings, etc.)
+- Approve objects and move them through the workflow
+- Set the current active AP/APO/APT/MIT shown on the dashboard
+- Answer engineering questions and provide strategic guidance
+- Help structure thinking and document decisions
 
-// ── Main send function ────────────────────────────────────────────────────────
+Be concise, professional, and action-oriented. When creating objects, confirm what you created.`
+
+// ── Main send function ─────────────────────────────────────────────────────────
 
 export async function sendToAgent(
   userMessage: string,
-  context?: Record<string, unknown>
+  _context?: Record<string, unknown>
 ): Promise<AgentMessage> {
-  if (!client) throw new Error('OpenAI not initialized')
-  if (!assistantId) throw new Error('Assistant ID not configured')
+  if (!client) throw new Error('OpenAI not initialized — check your API key in openaiassistantkey.env')
 
-  const threadId = await getOrCreateThread()
+  // Add user message to history
+  history.push({ role: 'user', content: userMessage })
 
-  // Save user message locally
-  const userMsg: AgentMessage = {
-    id: randomUUID(),
-    role: 'user',
-    content: userMessage,
-    created_at: new Date().toISOString(),
-  }
-  await saveAgentMessage(userMsg)
+  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    ...history,
+  ]
 
-  // Add the message to the thread
-  const contextNote = context
-    ? `\n\n[Context: ${JSON.stringify(context)}]`
-    : ''
-
-  await client.beta.threads.messages.create(threadId, {
-    role: 'user',
-    content: userMessage + contextNote,
-  })
-
-  // Create a run and poll until complete
-  let run = await client.beta.threads.runs.createAndPoll(threadId, {
-    assistant_id: assistantId,
+  let response = await client.chat.completions.create({
+    model: 'gpt-4o',
+    messages,
     tools: TOOLS,
+    tool_choice: 'auto',
   })
 
-  // Handle tool calls if the run requires action
-  while (run.status === 'requires_action') {
-    const toolCalls = run.required_action?.submit_tool_outputs?.tool_calls ?? []
-    const toolOutputs: { tool_call_id: string; output: string }[] = []
+  let msg = response.choices[0].message
 
-    for (const tc of toolCalls) {
+  // Handle tool calls in a loop (model may call multiple tools)
+  while (msg.tool_calls && msg.tool_calls.length > 0) {
+    // Push the assistant's tool-call message into history
+    history.push(msg)
+    messages.push(msg)
+
+    // Execute each tool and push results
+    for (const tc of msg.tool_calls) {
       const args = JSON.parse(tc.function.arguments) as Record<string, unknown>
       const result = await executeTool(tc.function.name, args)
-      toolOutputs.push({ tool_call_id: tc.id, output: JSON.stringify(result) })
+      const toolResult: OpenAI.Chat.ChatCompletionMessageParam = {
+        role: 'tool',
+        tool_call_id: tc.id,
+        content: JSON.stringify(result),
+      }
+      history.push(toolResult)
+      messages.push(toolResult)
     }
 
-    run = await client.beta.threads.runs.submitToolOutputsAndPoll(threadId, run.id, {
-      tool_outputs: toolOutputs,
+    // Ask the model to continue with the tool results
+    response = await client.chat.completions.create({
+      model: 'gpt-4o',
+      messages,
+      tools: TOOLS,
+      tool_choice: 'auto',
     })
+    msg = response.choices[0].message
   }
 
-  if (run.status !== 'completed') {
-    throw new Error(`Run ended with status: ${run.status}`)
-  }
+  const text = typeof msg.content === 'string' ? msg.content : '[No response]'
 
-  // Get the latest assistant message
-  const messages = await client.beta.threads.messages.list(threadId, { limit: 1, order: 'desc' })
-  const latest = messages.data[0]
-  const content = latest?.content[0]
-  const text = content?.type === 'text' ? content.text.value : '[No response]'
+  // Push final assistant reply into history
+  history.push({ role: 'assistant', content: text })
 
   const agentMsg: AgentMessage = {
     id: randomUUID(),
