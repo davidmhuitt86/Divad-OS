@@ -104,21 +104,19 @@ html, body {
    text — both nearly invisible on dark backgrounds. These rules lift them
    to readable contrast levels without touching the dark background theme. */
 
-/* Very-dark near-invisible text → visible slate */
-[style*="color: rgb(42, 48, 66)"],
-[style*="color:#2a3042"] {
+/* Very-dark near-invisible text (#2a3042) → readable slate-500
+   Browser normalizes hex to rgb() in the style attribute. */
+[style*="color: rgb(42, 48, 66)"] {
   color: #64748b !important;
 }
 
-/* Standard muted labels → readable slate */
-[style*="color: rgb(71, 85, 105)"],
-[style*="color:#475569"] {
+/* Standard muted labels (#475569) → slate-400 */
+[style*="color: rgb(71, 85, 105)"] {
   color: #94a3b8 !important;
 }
 
-/* Thin weight on small inline text — bump to medium */
-[style*="fontSize: 9"],
-[style*="fontSize: 10"],
+/* Small-text font-weight bump: React sets fontSize as a number in the
+   style attribute like "font-size: 9px" */
 [style*="font-size: 9px"],
 [style*="font-size: 10px"] {
   font-weight: 500;
