@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Search, Bell, X, User, Settings, KeyRound, LogOut, HelpCircle, Keyboard, ChevronDown, Bot, Cpu } from 'lucide-react'
+import { Search, Bell, X, User, Settings, KeyRound, LogOut, HelpCircle, Keyboard, ChevronDown } from 'lucide-react'
 import { useStore } from '../../store'
 import type { EKEObject } from '../../../shared/types'
 
@@ -232,19 +232,6 @@ export default function Header() {
           </button>
           {notificationsOpen && <NotificationsPanel />}
         </div>
-
-        {/* AI Assistant */}
-        {hPrefs.showAIAssistant && (
-          <button onClick={() => setActivePage('workspace')}
-            style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 14px', background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, cursor: 'pointer', color: '#94a3b8' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(59,130,246,0.35)'; (e.currentTarget as HTMLElement).style.color = '#3b82f6' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#1a1e28'; (e.currentTarget as HTMLElement).style.color = '#94a3b8' }}>
-            <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, #60a5fa, #2563eb)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Bot size={12} color="#fff" />
-            </div>
-            <span style={{ fontSize: 12, fontWeight: 600 }}>AI Assistant</span>
-          </button>
-        )}
 
         {/* Divider */}
         <div style={{ width: 1, height: 32, background: '#1a1e28' }} />

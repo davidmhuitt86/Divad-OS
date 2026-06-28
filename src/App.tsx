@@ -11,6 +11,7 @@ import Workspace from './pages/Workspace'
 import Reports from './pages/Reports'
 import Calendar from './pages/Calendar'
 import Settings from './pages/Settings'
+import Assistant from './pages/Assistant'
 import CreationWizard from './components/wizard/CreationWizard'
 import ObjectViewer from './components/objects/ObjectViewer'
 import UserGuide, { hasAcceptedGuide } from './components/onboarding/UserGuide'
@@ -37,6 +38,7 @@ function ActivePage({ page }: { page: string }) {
     case 'reports':      return <Reports />
     case 'calendar':     return <Calendar />
     case 'settings':     return <Settings />
+    case 'assistant':    return <Assistant />
     default:             return <Operations />
   }
 }
