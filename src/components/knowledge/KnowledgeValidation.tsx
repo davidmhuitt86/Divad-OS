@@ -1,4 +1,5 @@
 import { ArrowRight } from 'lucide-react'
+import { useStore } from '../../store'
 
 const SEGMENTS = [
   { label: 'Validated',    count: 8732, pct: 69, color: '#22c55e' },
@@ -8,6 +9,7 @@ const SEGMENTS = [
 ]
 
 export default function KnowledgeValidation() {
+  const { navigateToObjects } = useStore()
   const R = 52; const CX = 70; const CY = 70; const CIRC = 2 * Math.PI * R
   let offset = CIRC * 0.25
 
@@ -45,7 +47,7 @@ export default function KnowledgeValidation() {
         </div>
       </div>
       <div style={{ padding: '8px 12px', borderTop: '1px solid #1a1e28' }}>
-        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <button onClick={() => navigateToObjects('knowledge_object')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4 }}>
           Go to Validation Center <ArrowRight size={10} />
         </button>
       </div>

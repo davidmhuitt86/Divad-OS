@@ -2,6 +2,10 @@ import { useState, useMemo } from 'react'
 import { Plus, ArrowRight, Settings, ChevronRight, ChevronLeft } from 'lucide-react'
 import { useStore } from '../store'
 import type { EKEObject } from '../../shared/types'
+import LayoutLock from '../components/layout/LayoutLock'
+import { usePageLayout } from '../hooks/usePageLayout'
+
+const WORKSPACE_PANELS = ['sidebar', 'main', 'rightPanel']
 
 const QUICK_CREATE_ACTIONS: [string, string, string | undefined][] = [
   ['New Object',   '◈', undefined],
@@ -53,8 +57,9 @@ function phaseProgress(phase: EKEObject, allObjects: EKEObject[]): number {
 }
 
 export default function Workspace() {
-  const { objects, activity, openWizard, setActivePage, openObject } = useStore()
+  const { objects, activity, openWizard, setActivePage, openObject, navigateToObjects } = useStore()
   const [tab, setTab] = useState('Overview')
+  const layout = usePageLayout('workspace', WORKSPACE_PANELS)
 
   const tasks      = useMemo(() => objects.filter(o => o.type === 'task'),              [objects])
   const documents  = useMemo(() => objects.filter(o => o.type === 'document'),          [objects])
@@ -89,7 +94,7 @@ export default function Workspace() {
   const DAY_LABELS = ['MON','TUE','WED','THU','FRI','SAT','SUN']
 
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#0d0f14' }}>
+    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#0d0f14', position: 'relative' }}>
       {/* Left sidebar */}
       <div style={{ width: 196, borderRight: '1px solid #1a1e28', display: 'flex', flexDirection: 'column', padding: '14px 0', flexShrink: 0, overflowY: 'auto' }}>
         <SideSection label="Quick Create">
@@ -103,8 +108,13 @@ export default function Workspace() {
         <div style={{ margin: '10px 14px', height: 1, background: '#1a1e28' }} />
 
         <SideSection label="Workspace Views">
-          {['My Workspace', 'Team Workspace', 'Project Workspace', 'Executive Workspace'].map(v => (
-            <button key={v} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: v === 'My Workspace' ? '#3b82f6' : '#94a3b8', width: '100%', textAlign: 'left', fontWeight: v === 'My Workspace' ? 600 : 400 }}>
+          {([
+            ['My Workspace',        'Overview'],
+            ['Team Workspace',      'Team Activity'],
+            ['Project Workspace',   'My APs'],
+            ['Executive Workspace', 'Overview'],
+          ] as [string, string][]).map(([v, tabTarget]) => (
+            <button key={v} onClick={() => setTab(tabTarget)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: v === 'My Workspace' ? '#3b82f6' : '#94a3b8', width: '100%', textAlign: 'left', fontWeight: v === 'My Workspace' ? 600 : 400 }}>
               {v}
             </button>
           ))}
@@ -180,6 +190,7 @@ export default function Workspace() {
 
       {/* Right panel */}
       <RightPanel weekDays={weekDays} dayLabels={DAY_LABELS} today={today} activity={recentActivity} objects={objects} tasks={activeTasks} documents={documents} onOpenWizard={openWizard} onNavigate={setActivePage} />
+      <LayoutLock layout={layout} />
     </div>
   )
 }

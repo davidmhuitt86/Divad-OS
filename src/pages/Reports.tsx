@@ -117,7 +117,7 @@ export default function Reports() {
 
         {/* Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px 16px' }}>
-          {tab === 'Overview' && <OverviewTab objects={objects} />}
+          {tab === 'Overview' && <OverviewTab objects={objects} onSetTab={setTab} />}
           {tab !== 'Overview' && (
             <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, padding: '48px', textAlign: 'center' }}>
               <div style={{ fontSize: 24, marginBottom: 10 }}>📊</div>
@@ -174,12 +174,13 @@ export default function Reports() {
           </button>
         </div>
       </div>
+      <LayoutLock layout={layout} />
     </div>
   )
 }
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
-function OverviewTab({ objects }: { objects: any[] }) {
+function OverviewTab({ objects, onSetTab }: { objects: any[]; onSetTab: (t: string) => void }) {
   const totalObjects = objects.length
   const byType: Record<string, number> = {}
   for (const o of objects) byType[o.type] = (byType[o.type] ?? 0) + 1
@@ -294,7 +295,7 @@ function OverviewTab({ objects }: { objects: any[] }) {
       <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden' }}>
         <div style={{ padding: '9px 14px', borderBottom: '1px solid #1a1e28', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569' }}>Recent Reports</span>
-          <button onClick={() => setTab('My Reports')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All Reports</button>
+          <button onClick={() => onSetTab('My Reports')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All Reports</button>
         </div>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
           <thead>

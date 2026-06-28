@@ -2,6 +2,10 @@ import { useState, useMemo, useEffect } from 'react'
 import { Plus, ChevronDown, Search, MoreHorizontal, X, ArrowRight } from 'lucide-react'
 import { useStore } from '../store'
 import type { EKEObject, ObjectStatus, ObjectType } from '../../shared/types'
+import LayoutLock from '../components/layout/LayoutLock'
+import { usePageLayout } from '../hooks/usePageLayout'
+
+const OBJ_PANELS = ['sidebar', 'main', 'detail']
 
 const STATUS_COLOR: Record<ObjectStatus, string> = {
   draft:     '#3b82f6',
@@ -23,6 +27,7 @@ const PAGE_SIZE = 10
 
 export default function Objects() {
   const { objects, openObject, objectTypeFilter, objectStatusFilter, clearObjectFilters, openWizard, setActivePage } = useStore()
+  const layout = usePageLayout('objects', OBJ_PANELS)
   const [search, setSearch]         = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -77,7 +82,7 @@ export default function Objects() {
   )
 
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', position: 'relative' }}>
       {/* Left sidebar filters */}
       <div style={{ width: 200, background: '#0d0f14', borderRight: '1px solid #1a1e28', display: 'flex', flexDirection: 'column', padding: '14px 0', flexShrink: 0, overflowY: 'auto' }}>
         <div style={{ padding: '0 14px 10px', fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Quick Create</div>
@@ -376,6 +381,7 @@ export default function Objects() {
           </div>
         </div>
       )}
+      <LayoutLock layout={layout} />
     </div>
   )
 }
