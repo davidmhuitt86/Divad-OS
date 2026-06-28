@@ -16,5 +16,13 @@
   "revision": 1,
   "parent_id": null,
   "created_at": "2026-06-27T17:59:08.821Z",
-  "updated_at": "2026-06-27T17:59:08.821Z"
+  "updated_at": "2026-06-27T17:59:08.821Z",
+  "body": null,
+  "engineering_id": null,
+  "obj_class": null,
+  "dis_category": null,
+  "dis_subsystem": null,
+  "dis_type": null,
+  "short_name": null,
+  "aliases": []
 }
