@@ -28,7 +28,7 @@ function relativeTime(iso: string): string {
 }
 
 export default function ObjectViewer() {
-  const { viewingObject, closeObject, objects, openObject, setActivePage, openWizard } = useStore()
+  const { viewingObject, closeObject, objects, openObject, setActivePage, openWizardEdit } = useStore()
   const [activity, setActivity] = useState<ActivityEvent[]>([])
   const [showMeta, setShowMeta] = useState(true)
   const [showActivity, setShowActivity] = useState(true)
@@ -94,7 +94,7 @@ export default function ObjectViewer() {
               </button>
             )}
             {(obj.status === 'draft' || obj.status === 'approved' || obj.status === 'published') && (
-              <button onClick={() => { closeObject(); openWizard(obj.type) }} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 11, color: '#94a3b8' }}>
+              <button onClick={() => { closeObject(); openWizardEdit(obj) }} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 11, color: '#94a3b8' }}>
                 <Edit2 size={12} /> Edit
               </button>
             )}

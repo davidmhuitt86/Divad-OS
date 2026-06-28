@@ -35,7 +35,9 @@ interface Store {
 
   wizardOpen: boolean
   wizardInitialType: string | null
+  editingObject: EKEObject | null
   openWizard: (type?: string) => void
+  openWizardEdit: (obj: EKEObject) => void
   closeWizard: () => void
 
   viewingObject: EKEObject | null
@@ -114,8 +116,10 @@ export const useStore = create<Store>((set, get) => ({
 
   wizardOpen: false,
   wizardInitialType: null,
-  openWizard: (type) => set({ wizardOpen: true, wizardInitialType: type ?? null }),
-  closeWizard: () => set({ wizardOpen: false, wizardInitialType: null }),
+  editingObject: null,
+  openWizard: (type) => set({ wizardOpen: true, wizardInitialType: type ?? null, editingObject: null }),
+  openWizardEdit: (obj) => set({ wizardOpen: true, wizardInitialType: obj.type, editingObject: obj }),
+  closeWizard: () => set({ wizardOpen: false, wizardInitialType: null, editingObject: null }),
 
   viewingObject: null,
   openObject: (obj) => set({ viewingObject: obj }),
