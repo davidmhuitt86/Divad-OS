@@ -1,0 +1,21 @@
+{
+  "id": "01a280fd-6fae-49b5-bf3e-7d80af8dc0a3",
+  "type": "document",
+  "title": "KIE-0001 — Knowledge Ingestion Engine Architecture",
+  "description": "Formal architecture document for the Knowledge Ingestion Engine (KIE), detailing the subsystem responsible for transforming raw engineering information into validated Knowledge Objects within the Engineering Knowledge Engine platform. Describes workflows, validation, and modular integration.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "specification",
+    "architecture",
+    "KIE",
+    "EKE",
+    "foundational"
+  ],
+  "priority": "critical",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:27:01.281Z",
+  "updated_at": "2026-06-28T13:27:01.281Z"
+}

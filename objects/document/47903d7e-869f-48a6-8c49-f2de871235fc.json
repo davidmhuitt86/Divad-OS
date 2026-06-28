@@ -1,0 +1,15 @@
+{
+  "id": "47903d7e-869f-48a6-8c49-f2de871235fc",
+  "type": "document",
+  "title": "Eye-Tracking Based Training Methodology for KIE",
+  "description": "A comprehensive document detailing the proposed methodology for training the Knowledge Ingestion Engine (KIE) using eye-tracking technology and cognitive workflows observed from subject matter experts.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [],
+  "priority": null,
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:59:20.003Z",
+  "updated_at": "2026-06-28T13:59:20.003Z"
+}

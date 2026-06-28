@@ -1,0 +1,15 @@
+{
+  "id": "f38e3f56-3b72-418f-82fe-e511eb8ae257",
+  "type": "knowledge_object",
+  "title": "COIM - Cognitive Object Ingestion Matrix",
+  "description": "Provides a formal reasoning framework in the KIE to transform PKOs into validated KOs by emulating expert engineer cognitive workflow.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [],
+  "priority": null,
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:38:10.028Z",
+  "updated_at": "2026-06-28T13:38:10.028Z"
+}

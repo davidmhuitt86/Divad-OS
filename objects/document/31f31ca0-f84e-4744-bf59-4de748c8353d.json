@@ -1,0 +1,19 @@
+{
+  "id": "31f31ca0-f84e-4744-bf59-4de748c8353d",
+  "type": "document",
+  "title": "Engineering Knowledge Ontology",
+  "description": "Specification document defining the ontology and taxonomy for classifying and relating engineering knowledge objects in the Engineering Knowledge Engine ecosystem.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "ontology",
+    "engineering",
+    "knowledge"
+  ],
+  "priority": "high",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:25:13.002Z",
+  "updated_at": "2026-06-28T13:25:13.002Z"
+}

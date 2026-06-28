@@ -1,0 +1,20 @@
+{
+  "id": "72a02cfc-da4e-4958-8fd9-2f6b5d52eada",
+  "type": "document",
+  "title": "UOM-0001 — Universal Object Model Specification",
+  "description": "Specification for the Universal Object Model. Establishes object taxonomy, attributes, relationships, and lifecycle within Divad OS and the Engineering Knowledge Engine.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "uom",
+    "universal-object-model",
+    "specification",
+    "architecture"
+  ],
+  "priority": "critical",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:07:27.979Z",
+  "updated_at": "2026-06-28T13:07:27.979Z"
+}

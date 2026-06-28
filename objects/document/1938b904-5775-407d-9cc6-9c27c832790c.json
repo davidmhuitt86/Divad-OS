@@ -1,0 +1,15 @@
+{
+  "id": "1938b904-5775-407d-9cc6-9c27c832790c",
+  "type": "document",
+  "title": "Knowledge Ingestion Engine Subsystem",
+  "description": "Outlines the components like the Engineering Attention Model and Reasoning Engine that collectively work to capture expert engineering cognition.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [],
+  "priority": null,
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:41:11.976Z",
+  "updated_at": "2026-06-28T13:41:11.976Z"
+}

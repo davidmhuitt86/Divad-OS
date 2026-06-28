@@ -1,0 +1,15 @@
+{
+  "id": "5890f122-f70b-4ed6-a2aa-3c5e2733e7d9",
+  "type": "document",
+  "title": "Engineering Attention Maps and Cognitive Workflow",
+  "description": "Document capturing how Engineering Attention Maps can be constructed from professional analysis of technical documents to guide the KIE in replicating expert reasoning and observation.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [],
+  "priority": null,
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:59:20.010Z",
+  "updated_at": "2026-06-28T13:59:20.010Z"
+}

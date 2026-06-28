@@ -1,0 +1,19 @@
+{
+  "id": "362223c5-9ffe-4157-9c29-b895fb435906",
+  "type": "document",
+  "title": "UOM-0001 — Universal Object Model Specification",
+  "description": "Formal specification for the Universal Object Model (UOM), defining all object types, attributes, relationships, and lifecycles to be used throughout the Engineering Knowledge Engine.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "UOM",
+    "specification",
+    "foundational"
+  ],
+  "priority": "critical",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:25:12.967Z",
+  "updated_at": "2026-06-28T13:25:12.967Z"
+}

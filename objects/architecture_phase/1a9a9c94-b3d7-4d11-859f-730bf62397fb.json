@@ -1,0 +1,15 @@
+{
+  "id": "1a9a9c94-b3d7-4d11-859f-730bf62397fb",
+  "type": "architecture_phase",
+  "title": "AP-001 — Foundation Architecture",
+  "description": "Shifts focus from application development to platform engineering; fundamental decisions leading Divad to become an engineering company.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [],
+  "priority": null,
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:36:31.164Z",
+  "updated_at": "2026-06-28T13:36:31.164Z"
+}

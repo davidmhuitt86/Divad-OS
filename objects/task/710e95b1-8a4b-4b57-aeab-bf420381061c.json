@@ -1,0 +1,15 @@
+{
+  "id": "710e95b1-8a4b-4b57-aeab-bf420381061c",
+  "type": "task",
+  "title": "COIM-0001 — Cognitive Object Ingestion Matrix Specification",
+  "description": null,
+  "status": "draft",
+  "owner": "agent",
+  "tags": [],
+  "priority": null,
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:36:31.186Z",
+  "updated_at": "2026-06-28T13:36:31.186Z"
+}

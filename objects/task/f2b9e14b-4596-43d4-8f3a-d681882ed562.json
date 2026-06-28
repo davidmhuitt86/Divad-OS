@@ -1,0 +1,19 @@
+{
+  "id": "f2b9e14b-4596-43d4-8f3a-d681882ed562",
+  "type": "task",
+  "title": "Draft KIE-0001 Knowledge Ingestion Engine Architecture Specification",
+  "description": "Draft the initial architecture, core processing pipeline, inputs/outputs, and validation protocol for the Knowledge Ingestion Engine. Include development milestones and review checklist.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "KIE",
+    "draft",
+    "task"
+  ],
+  "priority": "high",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:25:12.981Z",
+  "updated_at": "2026-06-28T13:25:12.981Z"
+}

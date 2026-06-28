@@ -1,0 +1,20 @@
+{
+  "id": "8c0e97f8-b323-466c-98ba-c1c2bca4b14d",
+  "type": "document",
+  "title": "COIM-0001 — Cognitive Object Ingestion Matrix Specification",
+  "description": "Formal specification for the Cognitive Object Ingestion Matrix (COIM), defining the processes, data structures, and methodologies for capturing, modeling, and validating expert engineering cognition (observation, interpretation, reasoning, evidence, confidence, validation) within the Engineering Knowledge Engine.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "architecture",
+    "specification",
+    "coim",
+    "foundational"
+  ],
+  "priority": "critical",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:09:33.702Z",
+  "updated_at": "2026-06-28T13:09:33.703Z"
+}

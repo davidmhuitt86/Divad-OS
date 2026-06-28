@@ -1,0 +1,19 @@
+{
+  "id": "3f4e0502-a2ac-4225-af2b-5371619dc526",
+  "type": "task",
+  "title": "Draft UOM-0001 Universal Object Model Specification",
+  "description": "Draft the initial object type definitions, attribute schema, relationships, and lifecycle states for the Universal Object Model. Include checklist and review steps.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "UOM",
+    "draft",
+    "task"
+  ],
+  "priority": "high",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:25:12.989Z",
+  "updated_at": "2026-06-28T13:25:12.989Z"
+}
