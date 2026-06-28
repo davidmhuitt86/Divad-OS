@@ -59,6 +59,8 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', overflow: 'hidden', background: '#0d0f14', color: '#e2e8f0', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      {/* 32px native title bar spacer — draggable, no content */}
+      <div style={{ height: 32, flexShrink: 0, background: '#0d0f14', WebkitAppRegion: 'drag' } as React.CSSProperties} />
       <Header />
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
         <Sidebar />

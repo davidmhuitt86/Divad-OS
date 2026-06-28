@@ -46,8 +46,10 @@ const api = {
     history:  (objectId: string) => ipcRenderer.invoke('export:history', { objectId }),
   },
   on: (channel: string, cb: (...args: unknown[]) => void) => {
-    ipcRenderer.on(channel, (_e, ...args) => cb(...args))
-    return () => ipcRenderer.removeListener(channel, cb)
+    // Must store the wrapper reference — removeListener won't match an anonymous function
+    const handler = (_e: Electron.IpcRendererEvent, ...args: unknown[]) => cb(...args)
+    ipcRenderer.on(channel, handler)
+    return () => ipcRenderer.removeListener(channel, handler)
   },
 }
 

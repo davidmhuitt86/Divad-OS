@@ -294,10 +294,10 @@ function Step2({ s, upd }: { s: WizardState; upd: (p: Partial<WizardState>) => v
       <Field label="Title *">
         <Input value={s.title} onChange={v => upd({ title: v })} placeholder={`${TYPE_CONFIG[s.objectType]?.label ?? 'Object'} title...`} />
       </Field>
-      <Field label="Description">
+      <Field label="Description — include everything you know">
         <textarea value={s.description} onChange={e => upd({ description: e.target.value })}
-          placeholder="Brief description..."
-          style={{ ...inputStyle, minHeight: 64, resize: 'vertical' }} />
+          placeholder="Paste everything you have: conversation logs, brainstorm notes, AI chat transcripts, meeting summaries, external agent outputs, field observations, or raw ideas. The more context you provide here, the better your AI assistant can structure, summarize, and connect this knowledge."
+          style={{ ...inputStyle, minHeight: 100, resize: 'vertical', lineHeight: 1.6 }} />
       </Field>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>

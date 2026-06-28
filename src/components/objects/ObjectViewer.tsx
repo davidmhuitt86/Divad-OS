@@ -110,8 +110,9 @@ export default function ObjectViewer() {
     : []
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 800, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 48 }}>
-      <div onClick={closeObject} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)' }} />
+    <div style={{ position: 'fixed', inset: 0, zIndex: 800, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 48, WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+      {/* Backdrop — click to dismiss */}
+      <div onClick={closeObject} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', cursor: 'default' }} />
 
       <div style={{ position: 'relative', width: '90%', maxWidth: 1000, maxHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column', background: '#13161e', border: '1px solid #1a1e28', borderRadius: 12, overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.7)' }}>
 
@@ -129,22 +130,29 @@ export default function ObjectViewer() {
             </div>
             <div style={{ fontSize: 18, fontWeight: 700, color: '#f1f5f9', lineHeight: 1.3 }}>{obj.title}</div>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
             {obj.status === 'in_review' && (
-              <button onClick={handleApprove} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', background: '#22c55e18', border: '1px solid #22c55e44', borderRadius: 6, cursor: 'pointer', fontSize: 11, color: '#22c55e', fontWeight: 600 }}>
-                <CheckCircle size={12} /> Approve
+              <button onClick={handleApprove} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', background: '#22c55e18', border: '1px solid #22c55e44', borderRadius: 6, cursor: 'pointer', fontSize: 11, color: '#22c55e', fontWeight: 600 }}>
+                <CheckCircle size={13} /> Approve
               </button>
             )}
             {(obj.status === 'draft' || obj.status === 'approved' || obj.status === 'published') && (
-              <button onClick={() => { closeObject(); openWizardEdit(obj) }} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 11, color: '#94a3b8' }}>
-                <Edit2 size={12} /> Edit
+              <button onClick={() => { closeObject(); openWizardEdit(obj) }} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 11, color: '#94a3b8' }}>
+                <Edit2 size={13} /> Edit
               </button>
             )}
-            <button onClick={() => setShowExport(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 11, color: '#94a3b8' }}>
-              <Download size={12} /> Export
+            <button onClick={() => setShowExport(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 11, color: '#94a3b8' }}>
+              <Download size={13} /> Export
             </button>
-            <button onClick={closeObject} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: 4 }}>
-              <X size={18} />
+            {/* Close — large hitbox, clearly labeled */}
+            <button
+              onClick={e => { e.stopPropagation(); closeObject() }}
+              title="Close"
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 11, color: '#94a3b8', minWidth: 36, minHeight: 34 }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(239,68,68,0.4)'; (e.currentTarget as HTMLElement).style.color = '#ef4444' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#222736'; (e.currentTarget as HTMLElement).style.color = '#94a3b8' }}
+            >
+              <X size={14} /> Close
             </button>
           </div>
         </div>

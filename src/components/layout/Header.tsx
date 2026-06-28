@@ -37,7 +37,7 @@ function getHeaderSettings() {
   } catch { return { showGreeting: true, showQuote: true, showAIAssistant: true } }
 }
 
-const HEADER_H = 108
+const HEADER_H = 72
 
 export default function Header() {
   const {
@@ -111,19 +111,18 @@ export default function Header() {
       display: 'flex',
       alignItems: 'center',
       gap: 20,
-      padding: '0 20px 0 20px',
+      padding: '0 20px',
       background: '#0d0f14',
       borderBottom: '1px solid #1a1e28',
       flexShrink: 0,
       position: 'relative',
       zIndex: 100,
-      // right padding leaves room for Windows traffic-light controls (~150px)
-      paddingRight: 164,
-      WebkitAppRegion: 'drag',
-    } as unknown as React.CSSProperties}>
+      // Right padding reserves space for native Windows traffic-light buttons
+      paddingRight: 160,
+    }}>
 
       {/* ── Logo ─────────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, WebkitAppRegion: 'no-drag' } as unknown as React.CSSProperties}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
         <img src="/boot/divad-mark.png" alt="mark" style={{ height: 52, width: 'auto' }} />
         <div style={{ borderLeft: '1px solid #1a1e28', paddingLeft: 12 }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#e2e8f0', letterSpacing: '0.04em', lineHeight: 1 }}>DIVAD OS</div>
@@ -138,12 +137,14 @@ export default function Header() {
       </div>
 
       {/* ── Search ───────────────────────────────────────────────────────────── */}
-      <div ref={containerRef} style={{ flex: 1, position: 'relative', maxWidth: 560, WebkitAppRegion: 'no-drag' } as unknown as React.CSSProperties}>
+      <div ref={containerRef} style={{ flex: 1, position: 'relative', maxWidth: 560 }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px',
           borderRadius: showOverlay ? '8px 8px 0 0' : 8,
-          border: `1px solid ${focused ? 'rgba(59,130,246,0.45)' : '#222736'}`,
-          borderBottom: showOverlay ? '1px solid #222736' : undefined,
+          borderTop: `1px solid ${focused ? 'rgba(59,130,246,0.45)' : '#222736'}`,
+          borderLeft: `1px solid ${focused ? 'rgba(59,130,246,0.45)' : '#222736'}`,
+          borderRight: `1px solid ${focused ? 'rgba(59,130,246,0.45)' : '#222736'}`,
+          borderBottom: showOverlay ? '1px solid #222736' : `1px solid ${focused ? 'rgba(59,130,246,0.45)' : '#222736'}`,
           background: '#13161e', transition: 'border-color 0.15s',
           boxShadow: focused ? '0 0 0 3px rgba(59,130,246,0.08)' : 'none',
         }}>
@@ -220,7 +221,7 @@ export default function Header() {
       </div>
 
       {/* ── Right actions ────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, WebkitAppRegion: 'no-drag' } as unknown as React.CSSProperties}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
 
         {/* Notifications */}
         <div ref={bellRef} style={{ position: 'relative' }}>
