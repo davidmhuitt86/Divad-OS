@@ -33,6 +33,19 @@ interface Store {
   activePage: string
   setActivePage: (page: string) => void
 
+  objectTypeFilter: string | null
+  objectStatusFilter: string | null
+  navigateToObjects: (type?: string, status?: string) => void
+  clearObjectFilters: () => void
+
+  notificationsOpen: boolean
+  toggleNotifications: () => void
+  closeNotifications: () => void
+
+  userMenuOpen: boolean
+  toggleUserMenu: () => void
+  closeUserMenu: () => void
+
   wizardOpen: boolean
   wizardInitialType: string | null
   editingObject: EKEObject | null
@@ -113,6 +126,19 @@ export const useStore = create<Store>((set, get) => ({
 
   activePage: 'home',
   setActivePage: (page) => set({ activePage: page }),
+
+  objectTypeFilter: null,
+  objectStatusFilter: null,
+  navigateToObjects: (type, status) => set({ activePage: 'objects', objectTypeFilter: type ?? null, objectStatusFilter: status ?? null }),
+  clearObjectFilters: () => set({ objectTypeFilter: null, objectStatusFilter: null }),
+
+  notificationsOpen: false,
+  toggleNotifications: () => set(s => ({ notificationsOpen: !s.notificationsOpen, userMenuOpen: false })),
+  closeNotifications: () => set({ notificationsOpen: false }),
+
+  userMenuOpen: false,
+  toggleUserMenu: () => set(s => ({ userMenuOpen: !s.userMenuOpen, notificationsOpen: false })),
+  closeUserMenu: () => set({ userMenuOpen: false }),
 
   wizardOpen: false,
   wizardInitialType: null,

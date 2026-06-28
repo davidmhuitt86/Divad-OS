@@ -22,13 +22,20 @@ const TYPE_ICON: Record<string, string> = {
 const PAGE_SIZE = 10
 
 export default function Objects() {
-  const { objects, openObject } = useStore()
+  const { objects, openObject, objectTypeFilter, objectStatusFilter, clearObjectFilters, openWizard, setActivePage } = useStore()
   const [search, setSearch]         = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [page, setPage]             = useState(1)
   const [selected, setSelected]     = useState<EKEObject | null>(null)
   const [relCount, setRelCount]     = useState<number | null>(null)
+
+  // Apply store-level navigation filters on mount (e.g. from "View All Risks")
+  useEffect(() => {
+    if (objectTypeFilter)   { setTypeFilter(objectTypeFilter);   setPage(1) }
+    if (objectStatusFilter) { setStatusFilter(objectStatusFilter); setPage(1) }
+    clearObjectFilters()
+  }, [])
 
   const isElectron = typeof window !== 'undefined' && !!window.divadOS
   useEffect(() => {
@@ -74,8 +81,8 @@ export default function Objects() {
       {/* Left sidebar filters */}
       <div style={{ width: 200, background: '#0d0f14', borderRight: '1px solid #1a1e28', display: 'flex', flexDirection: 'column', padding: '14px 0', flexShrink: 0, overflowY: 'auto' }}>
         <div style={{ padding: '0 14px 10px', fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Quick Create</div>
-        {['New Object', 'From Template', 'Import Object'].map(a => (
-          <button key={a} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#94a3b8', textAlign: 'left', width: '100%' }}>
+        {([['New Object', undefined], ['From Template', 'document'], ['Import Object', undefined]] as [string, string | undefined][]).map(([a, type]) => (
+          <button key={a} onClick={() => openWizard(type)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#94a3b8', textAlign: 'left', width: '100%' }}>
             <span style={{ color: '#3b82f6' }}>+</span> {a}
           </button>
         ))}
@@ -116,10 +123,10 @@ export default function Objects() {
             <p style={{ fontSize: 12, color: '#475569', margin: '4px 0 0', fontStyle: 'italic' }}>Every element. Every connection. Every asset.</p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#94a3b8' }}>
+            <button onClick={() => setActivePage('knowledge')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#94a3b8' }}>
               Object Graph
             </button>
-            <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#3b82f6', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#fff', fontWeight: 600 }}>
+            <button onClick={() => openWizard()} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#3b82f6', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#fff', fontWeight: 600 }}>
               <Plus size={13} /> New Object <ChevronDown size={11} />
             </button>
           </div>
@@ -186,7 +193,7 @@ export default function Objects() {
                   <td style={{ padding: '10px 12px', color: '#475569', whiteSpace: 'nowrap' }}>{relativeTime(obj.updated_at)}</td>
                   <td style={{ padding: '10px 12px', color: '#2a3042', fontFamily: 'monospace', fontSize: 10 }}>{obj.id.slice(0, 8)}</td>
                   <td style={{ padding: '10px 8px' }}>
-                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex' }}><MoreHorizontal size={13} /></button>
+                    <button onClick={e => { e.stopPropagation(); openObject(obj) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex' }}><MoreHorizontal size={13} /></button>
                   </td>
                 </tr>
               ))}
@@ -363,7 +370,7 @@ export default function Objects() {
             )}
           </div>
           <div style={{ padding: '10px 14px', borderTop: '1px solid #1a1e28', flexShrink: 0 }}>
-            <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', background: '#3b82f6', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#fff', fontWeight: 600 }}>
+            <button onClick={() => openObject(selected)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '9px', background: '#3b82f6', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#fff', fontWeight: 600 }}>
               Open Object <ArrowRight size={12} />
             </button>
           </div>

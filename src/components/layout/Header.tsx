@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Search, Bell, X } from 'lucide-react'
+import { Search, Bell, X, User, Settings, KeyRound, LogOut, HelpCircle, Keyboard, ChevronDown } from 'lucide-react'
 import { useStore } from '../../store'
 import CreateMenu from '../wizard/CreateMenu'
 import type { EKEObject } from '../../../shared/types'
@@ -26,11 +26,18 @@ function groupByType(results: EKEObject[]): Map<string, EKEObject[]> {
 }
 
 export default function Header() {
-  const { appState, searchQuery, searchResults, setSearchQuery, runSearch, openObject } = useStore()
+  const {
+    appState, searchQuery, searchResults, setSearchQuery, runSearch, openObject,
+    notificationsOpen, toggleNotifications, closeNotifications,
+    userMenuOpen, toggleUserMenu, closeUserMenu,
+    setActivePage,
+  } = useStore()
   const [focused, setFocused] = useState(false)
   const [activeIdx, setActiveIdx] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const bellRef = useRef<HTMLDivElement>(null)
+  const avatarRef = useRef<HTMLDivElement>(null)
 
   const showOverlay = focused && searchQuery.trim().length > 1
   const flat = searchResults
@@ -94,11 +101,17 @@ export default function Header() {
     return () => window.removeEventListener('keydown', handleGlobalKey)
   }, [handleGlobalKey])
 
-  // Close overlay on outside click
+  // Close search overlay on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setFocused(false)
+      }
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) {
+        closeNotifications()
+      }
+      if (avatarRef.current && !avatarRef.current.contains(e.target as Node)) {
+        closeUserMenu()
       }
     }
     document.addEventListener('mousedown', handleClick)
@@ -236,19 +249,107 @@ export default function Header() {
       {/* Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <CreateMenu />
-        <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex' }}>
-          <Bell size={15} />
-        </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#3b82f6', fontSize: 10, fontWeight: 700 }}>DH</span>
+
+        {/* Bell / Notifications */}
+        <div ref={bellRef} style={{ position: 'relative' }}>
+          <button
+            onClick={toggleNotifications}
+            style={{ background: notificationsOpen ? 'rgba(59,130,246,0.1)' : 'none', border: 'none', cursor: 'pointer', color: notificationsOpen ? '#3b82f6' : '#475569', display: 'flex', padding: 6, borderRadius: 6 }}
+          >
+            <Bell size={15} />
+          </button>
+          {notificationsOpen && <NotificationsPanel />}
+        </div>
+
+        {/* Avatar / User menu */}
+        <div ref={avatarRef} style={{ position: 'relative' }}>
+          <div
+            onClick={toggleUserMenu}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '3px 6px', borderRadius: 6, background: userMenuOpen ? 'rgba(59,130,246,0.07)' : 'transparent' }}
+          >
+            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: '#3b82f6', fontSize: 10, fontWeight: 700 }}>DH</span>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, color: '#e2e8f0', lineHeight: 1 }}>David</div>
+              <div style={{ fontSize: 10, color: '#475569', marginTop: 2 }}>Chief Engineer</div>
+            </div>
+            <ChevronDown size={11} style={{ color: '#475569' }} />
           </div>
-          <div>
-            <div style={{ fontSize: 12, color: '#e2e8f0', lineHeight: 1 }}>David</div>
-            <div style={{ fontSize: 10, color: '#475569', marginTop: 2 }}>Chief Engineer</div>
-          </div>
+          {userMenuOpen && <UserMenuDropdown onNavigate={(page) => { setActivePage(page); closeUserMenu() }} />}
         </div>
       </div>
     </header>
+  )
+}
+
+function NotificationsPanel() {
+  const [activeTab, setActiveTab] = useState('All')
+  const tabs = ['All', 'Unread', 'Mentions', 'Task Updates', 'Approvals', 'System Alerts']
+  return (
+    <div style={{
+      position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 340,
+      background: '#13161e', border: '1px solid rgba(59,130,246,0.2)',
+      borderRadius: 10, boxShadow: '0 12px 40px rgba(0,0,0,0.6)', zIndex: 300,
+    }}>
+      <div style={{ padding: '12px 14px', borderBottom: '1px solid #1a1e28', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}>Notifications</span>
+        <button style={{ fontSize: 10, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>Mark All as Read</button>
+      </div>
+      <div style={{ display: 'flex', overflowX: 'auto', padding: '6px 10px', borderBottom: '1px solid #1a1e28', gap: 4 }}>
+        {tabs.map(t => (
+          <button key={t} onClick={() => setActiveTab(t)}
+            style={{ padding: '3px 10px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 10, whiteSpace: 'nowrap', fontWeight: t === activeTab ? 600 : 400, background: t === activeTab ? 'rgba(59,130,246,0.15)' : 'transparent', color: t === activeTab ? '#3b82f6' : '#475569' }}>
+            {t}
+          </button>
+        ))}
+      </div>
+      <div style={{ padding: '32px 14px', textAlign: 'center' }}>
+        <div style={{ fontSize: 24, marginBottom: 8 }}>🔔</div>
+        <div style={{ fontSize: 12, color: '#475569', fontStyle: 'italic' }}>No {activeTab.toLowerCase()} notifications</div>
+      </div>
+      <div style={{ padding: '10px 14px', borderTop: '1px solid #1a1e28', textAlign: 'center' }}>
+        <button style={{ fontSize: 11, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>View All Notifications</button>
+      </div>
+    </div>
+  )
+}
+
+function UserMenuDropdown({ onNavigate }: { onNavigate: (page: string) => void }) {
+  const items: [string, React.ReactNode, () => void][] = [
+    ['Profile', <User size={13} />, () => onNavigate('settings')],
+    ['My Settings', <Settings size={13} />, () => onNavigate('settings')],
+    ['API Keys', <KeyRound size={13} />, () => onNavigate('settings')],
+    ['Help & Documentation', <HelpCircle size={13} />, () => onNavigate('settings')],
+    ['Keyboard Shortcuts', <Keyboard size={13} />, () => onNavigate('settings')],
+  ]
+  return (
+    <div style={{
+      position: 'absolute', top: 'calc(100% + 8px)', right: 0, width: 210,
+      background: '#13161e', border: '1px solid rgba(59,130,246,0.15)',
+      borderRadius: 10, boxShadow: '0 12px 40px rgba(0,0,0,0.6)', zIndex: 300, overflow: 'hidden',
+    }}>
+      <div style={{ padding: '12px 14px', borderBottom: '1px solid #1a1e28' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f0' }}>David Huitt</div>
+        <div style={{ fontSize: 10, color: '#475569', marginTop: 2 }}>Chief Engineer</div>
+      </div>
+      {items.map(([label, icon, action]) => (
+        <button key={label} onClick={action}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#94a3b8', textAlign: 'left' }}
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#1a1e28'}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'none'}>
+          <span style={{ color: '#475569' }}>{icon}</span>
+          {label}
+        </button>
+      ))}
+      <div style={{ borderTop: '1px solid #1a1e28' }}>
+        <button
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#ef4444', textAlign: 'left' }}
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.07)'}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'none'}>
+          <LogOut size={13} /> Log Out
+        </button>
+      </div>
+    </div>
   )
 }

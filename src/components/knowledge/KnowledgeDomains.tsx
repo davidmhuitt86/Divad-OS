@@ -1,4 +1,5 @@
 ﻿import type { EKEObject } from '../../../shared/types'
+import { useStore } from '../../store'
 
 interface Props { objects: EKEObject[] }
 
@@ -30,6 +31,7 @@ const TYPE_COLOR: Record<string, string> = {
 }
 
 export default function KnowledgeDomains({ objects }: Props) {
+  const { navigateToObjects } = useStore()
   // Group by type
   const byType: Record<string, EKEObject[]> = {}
   for (const o of objects) {
@@ -69,7 +71,7 @@ export default function KnowledgeDomains({ objects }: Props) {
             const color = TYPE_COLOR[type] ?? '#475569'
             const pct = Math.round((objs.length / maxCount) * 100)
             return (
-              <div key={type} style={{ padding: '7px 12px', borderBottom: '1px solid #1a1e2833', cursor: 'pointer' }}
+              <div key={type} onClick={() => navigateToObjects(type)} style={{ padding: '7px 12px', borderBottom: '1px solid #1a1e2833', cursor: 'pointer' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#1a1e28'}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>

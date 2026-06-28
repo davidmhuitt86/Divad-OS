@@ -3,14 +3,14 @@ import type { EKEObject } from '../../../shared/types'
 
 const RISK_COLORS: Record<string, string> = { critical: '#ef4444', high: '#ef4444', medium: '#f59e0b', low: '#22c55e' }
 
-export function OpenRisks({ objects, onSelect }: { objects: EKEObject[]; onSelect: (o: EKEObject) => void }) {
+export function OpenRisks({ objects, onSelect, onViewAll }: { objects: EKEObject[]; onSelect: (o: EKEObject) => void; onViewAll?: () => void }) {
   const risks = objects.filter(o => o.type === 'risk' && o.status !== 'archived').slice(0, 5)
 
   return (
     <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '10px 14px', borderBottom: '1px solid #1a1e28', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#475569' }}>Open Risks</span>
-        <button style={{ fontSize: 11, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>View All</button>
+        <button onClick={onViewAll} style={{ fontSize: 11, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>View All</button>
       </div>
       {risks.length === 0 ? (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 80, fontSize: 11, color: '#2a3042', gap: 6 }}>
@@ -45,14 +45,14 @@ export function OpenRisks({ objects, onSelect }: { objects: EKEObject[]; onSelec
   )
 }
 
-export function DecisionsPending({ objects, onSelect }: { objects: EKEObject[]; onSelect: (o: EKEObject) => void }) {
+export function DecisionsPending({ objects, onSelect, onViewAll }: { objects: EKEObject[]; onSelect: (o: EKEObject) => void; onViewAll?: () => void }) {
   const decisions = objects.filter(o => o.type === 'decision' && (o.status === 'draft' || o.status === 'in_review')).slice(0, 5)
 
   return (
     <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '10px 14px', borderBottom: '1px solid #1a1e28', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#475569' }}>Decisions Pending</span>
-        <button style={{ fontSize: 11, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>View All</button>
+        <button onClick={onViewAll} style={{ fontSize: 11, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>View All</button>
       </div>
       {decisions.length === 0 ? (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 80, fontSize: 11, color: '#2a3042', gap: 6 }}>

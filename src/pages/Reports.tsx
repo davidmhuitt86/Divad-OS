@@ -25,7 +25,7 @@ function relativeTime(iso: string): string {
 }
 
 export default function Reports() {
-  const { objects, activity } = useStore()
+  const { objects, activity, openWizard } = useStore()
   const [tab, setTab] = useState('Overview')
   const [category, setCategory] = useState('all')
 
@@ -42,8 +42,13 @@ export default function Reports() {
       {/* Left sidebar */}
       <div style={{ width: 196, borderRight: '1px solid #1a1e28', display: 'flex', flexDirection: 'column', padding: '14px 0', flexShrink: 0, overflowY: 'auto' }}>
         <SideSection label="Quick Create">
-          {[['New Report','📊'], ['Report from Template','📋'], ['Schedule Report','🕐'], ['Export Data','📤']].map(([label, icon]) => (
-            <SideBtn key={label} label={label} icon={icon as string} />
+          {([
+            ['New Report',          '📊', () => openWizard('document')],
+            ['Report from Template','📋', () => openWizard('document')],
+            ['Schedule Report',     '🕐', () => setTab('Scheduled')],
+            ['Export Data',         '📤', () => setTab('Data Sources')],
+          ] as [string, string, () => void][]).map(([label, icon, action]) => (
+            <SideBtn key={label} label={label} icon={icon} onClick={action} />
           ))}
         </SideSection>
 
@@ -85,10 +90,10 @@ export default function Reports() {
               <p style={{ fontSize: 12, color: '#475569', margin: '4px 0 0', fontStyle: 'italic' }}>Insight. Analysis. Intelligence.</p>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#94a3b8' }}>
+              <button onClick={() => openWizard('document')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#94a3b8' }}>
                 📊 Create Report
               </button>
-              <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#3b82f6', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#fff', fontWeight: 600 }}>
+              <button onClick={() => openWizard('document')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#3b82f6', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#fff', fontWeight: 600 }}>
                 <Plus size={13} /> New Report <ChevronDown size={11} />
               </button>
             </div>
@@ -123,7 +128,7 @@ export default function Reports() {
         <div style={{ borderBottom: '1px solid #1a1e28', padding: '12px 14px' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Report Insights</div>
           <div style={{ fontSize: 10, color: '#2a3042', fontStyle: 'italic', marginBottom: 8 }}>No reports generated yet.</div>
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
+          <button onClick={() => setTab('My Reports')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
             View All Insights <ArrowRight size={10} />
           </button>
         </div>
@@ -132,7 +137,7 @@ export default function Reports() {
         <div style={{ borderBottom: '1px solid #1a1e28', padding: '12px 14px', flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Recent Activity</span>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All</button>
+            <button onClick={() => setTab('My Reports')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All</button>
           </div>
           {recentActivity.length === 0 ? (
             <div style={{ fontSize: 10, color: '#2a3042', fontStyle: 'italic' }}>No activity recorded yet</div>
@@ -155,10 +160,10 @@ export default function Reports() {
         <div style={{ padding: '12px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Scheduled Reports</span>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All</button>
+            <button onClick={() => setTab('Scheduled')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All</button>
           </div>
           <div style={{ fontSize: 10, color: '#2a3042', fontStyle: 'italic', marginBottom: 8 }}>No scheduled reports</div>
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
+          <button onClick={() => setTab('Scheduled')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
             Manage Schedules <ArrowRight size={10} />
           </button>
         </div>
@@ -283,7 +288,7 @@ function OverviewTab({ objects }: { objects: any[] }) {
       <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden' }}>
         <div style={{ padding: '9px 14px', borderBottom: '1px solid #1a1e28', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569' }}>Recent Reports</span>
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All Reports</button>
+          <button onClick={() => setTab('My Reports')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All Reports</button>
         </div>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
           <thead>
@@ -329,9 +334,9 @@ function SideSection({ label, children }: { label: string; children: React.React
   )
 }
 
-function SideBtn({ label, icon }: { label: string; icon: string }) {
+function SideBtn({ label, icon, onClick }: { label: string; icon: string; onClick?: () => void }) {
   return (
-    <button style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#94a3b8', width: '100%', textAlign: 'left' }}>
+    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#94a3b8', width: '100%', textAlign: 'left' }}>
       <span style={{ color: '#3b82f6' }}>+</span> {label}
     </button>
   )
