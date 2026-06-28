@@ -1,10 +1,12 @@
 ﻿import { useState } from 'react'
 import { Search } from 'lucide-react'
 import type { EKEObject } from '../../../shared/types'
+import { useStore } from '../../store'
 
 interface Props { objects: EKEObject[] }
 
 export default function KnowledgeRightPanel({ objects }: Props) {
+  const { openObject } = useStore()
   const [query, setQuery] = useState('')
 
   const total     = objects.length
@@ -80,7 +82,7 @@ export default function KnowledgeRightPanel({ objects }: Props) {
               {filtered.length === 0 ? (
                 <div style={{ fontSize: 10, color: '#2a3042', fontStyle: 'italic', padding: '4px 0' }}>No results</div>
               ) : filtered.slice(0, 5).map(o => (
-                <div key={o.id} style={{ padding: '4px 0', fontSize: 10, color: '#94a3b8', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                <div key={o.id} onClick={() => openObject(o)} style={{ padding: '4px 0', fontSize: 10, color: '#94a3b8', cursor: 'pointer', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#e2e8f0'}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#94a3b8'}>
                   {o.title}
@@ -106,7 +108,7 @@ export default function KnowledgeRightPanel({ objects }: Props) {
           {recentActivity.length === 0 ? (
             <div style={{ padding: '12px', fontSize: 11, color: '#2a3042', fontStyle: 'italic' }}>No recent activity</div>
           ) : recentActivity.map(o => (
-            <div key={o.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '7px 12px', borderBottom: '1px solid #1a1e2833' }}>
+            <div key={o.id} onClick={() => openObject(o)} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '7px 12px', borderBottom: '1px solid #1a1e2833', cursor: 'pointer' }}>
               <div style={{ width: 24, height: 24, borderRadius: 4, background: '#1a1e28', border: '1px solid #222736', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, flexShrink: 0 }}>
                 {o.type[0]?.toUpperCase() ?? '?'}
               </div>

@@ -21,6 +21,7 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
 
 export default function Settings() {
   const { settings, update, save, reset, dirty, lastSaved } = useSettings()
+  const { setActivePage } = useStore()
   const [expanded, setExpanded] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -38,7 +39,7 @@ export default function Settings() {
       <div style={{ width: 196, borderRight: '1px solid #1a1e28', display: 'flex', flexDirection: 'column', padding: '14px 0', flexShrink: 0, overflowY: 'auto' }}>
         <div style={{ padding: '0 14px 8px', fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Quick Access</div>
         {['My Tasks','My Documents','My Objects','My APs','Team Activity'].map(l => (
-          <button key={l} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#94a3b8', width: '100%', textAlign: 'left' }}>{l}</button>
+          <button key={l} onClick={() => setActivePage('workspace')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#94a3b8', width: '100%', textAlign: 'left' }}>{l}</button>
         ))}
 
         <div style={{ margin: '10px 14px', height: 1, background: '#1a1e28' }} />
@@ -54,7 +55,7 @@ export default function Settings() {
           </div>
         </div>
         <div style={{ padding: '10px 14px 0' }}>
-          <button style={{ width: '100%', padding: '6px', background: 'none', border: '1px solid #1a1e28', borderRadius: 5, cursor: 'pointer', fontSize: 10, color: '#3b82f6' }}>View System Health</button>
+          <button onClick={() => setExpanded('about')} style={{ width: '100%', padding: '6px', background: 'none', border: '1px solid #1a1e28', borderRadius: 5, cursor: 'pointer', fontSize: 10, color: '#3b82f6' }}>View System Health</button>
         </div>
       </div>
 
@@ -413,10 +414,10 @@ export default function Settings() {
           <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Additional Settings Highlights</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             {[
-              { icon: '⌨️', title: 'Keyboard Shortcuts', desc: 'View and customize keyboard shortcuts to work faster.' },
-              { icon: '↕️', title: 'Import / Export Settings', desc: 'Export your settings to reuse on other devices or team members.' },
+              { icon: '⌨️', title: 'Keyboard Shortcuts', desc: 'View and customize keyboard shortcuts to work faster.', action: () => toggle('workspace') },
+              { icon: '↕️', title: 'Import / Export Settings', desc: 'Export your settings to reuse on other devices or team members.', action: () => toggle('datasync') },
               { icon: '↺',  title: 'Reset Preferences', desc: 'Reset all settings to default without deleting your data.', action: () => { if (confirm('Reset all settings to defaults?')) reset() } },
-              { icon: '💬', title: 'Feedback & Support', desc: 'Send feedback, report issues, or request new features.' },
+              { icon: '💬', title: 'Feedback & Support', desc: 'Send feedback, report issues, or request new features.', action: () => toggle('about') },
             ].map(c => (
               <div key={c.title} onClick={c.action} style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, padding: '12px 14px', cursor: c.action ? 'pointer' : 'default' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = '#3b82f644'}

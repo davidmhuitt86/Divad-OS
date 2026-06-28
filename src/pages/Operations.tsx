@@ -9,7 +9,7 @@ import RightContextPanel from '../components/operations/RightContextPanel'
 import type { EKEObject } from '../../shared/types'
 
 export default function Operations() {
-  const { appState, objects, activity, loadAppState, loadActivity, loadObjects } = useStore()
+  const { appState, objects, activity, loadAppState, loadActivity, loadObjects, setActivePage, navigateToObjects, openObject } = useStore()
   const [selectedObject, setSelectedObject] = useState<EKEObject | null>(null)
 
   useEffect(() => {
@@ -56,13 +56,15 @@ export default function Operations() {
             <ArchitectureTimeline
               objects={objects}
               currentAPId={appState.currentAP?.id ?? null}
+              onViewRoadmap={() => setActivePage('architecture')}
+              onViewAllMilestones={() => navigateToObjects('apm')}
             />
           </div>
 
           {/* Third row: Risks + Decisions */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <OpenRisks objects={objects} onSelect={setSelectedObject} />
-            <DecisionsPending objects={objects} onSelect={setSelectedObject} />
+            <OpenRisks objects={objects} onSelect={setSelectedObject} onViewAll={() => navigateToObjects('risk')} />
+            <DecisionsPending objects={objects} onSelect={setSelectedObject} onViewAll={() => navigateToObjects('decision')} />
           </div>
 
           {/* Bottom panel */}
@@ -73,7 +75,11 @@ export default function Operations() {
       </div>
 
       {/* Right context panel */}
-      <RightContextPanel object={selectedObject} onClose={() => setSelectedObject(null)} />
+      <RightContextPanel
+        object={selectedObject}
+        onClose={() => setSelectedObject(null)}
+        onOpenInWorkspace={() => { if (selectedObject) { openObject(selectedObject); setActivePage('workspace') } }}
+      />
     </div>
   )
 }

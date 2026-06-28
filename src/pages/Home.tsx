@@ -6,6 +6,7 @@ import SystemOverview from '../components/panels/SystemOverview'
 import AgentChat from '../components/panels/AgentChat'
 import OpenItems from '../components/panels/OpenItems'
 import KnowledgeGraph from '../components/panels/KnowledgeGraph'
+import QuickActions from '../components/panels/QuickActions'
 import type { EKEObject } from '../../shared/types'
 
 export default function Home() {
@@ -45,7 +46,7 @@ export default function Home() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <AgentChat />
         </div>
-        <div className="panel" style={{ width: 320, display: 'flex', flexDirection: 'column' }}>
+        <div className="panel" style={{ width: 300, display: 'flex', flexDirection: 'column' }}>
           <div className="panel-header">
             <span className="panel-title">Knowledge Graph</span>
             {graphData.nodes.length > 0 && (
@@ -55,6 +56,9 @@ export default function Home() {
           <div style={{ flex: 1, minHeight: 0, padding: 8 }}>
             <KnowledgeGraph nodes={graphData.nodes} edges={graphData.edges} />
           </div>
+        </div>
+        <div style={{ width: 180, flexShrink: 0 }}>
+          <QuickActions />
         </div>
       </div>
     </div>

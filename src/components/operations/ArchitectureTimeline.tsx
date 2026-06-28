@@ -7,9 +7,10 @@ interface Props {
   objects: EKEObject[]
   currentAPId: string | null
   onViewRoadmap?: () => void
+  onViewAllMilestones?: () => void
 }
 
-export default function ArchitectureTimeline({ objects, currentAPId, onViewRoadmap }: Props) {
+export default function ArchitectureTimeline({ objects, currentAPId, onViewRoadmap, onViewAllMilestones }: Props) {
   const aps = objects.filter(o => o.type === 'architecture_phase')
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
 
@@ -81,7 +82,7 @@ export default function ArchitectureTimeline({ objects, currentAPId, onViewRoadm
       <div style={{ borderTop: '1px solid #1a1e28', padding: '10px 14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
           <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#475569' }}>Upcoming Milestones</span>
-          <button style={{ fontSize: 11, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>View All</button>
+          <button onClick={onViewAllMilestones} style={{ fontSize: 11, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>View All</button>
         </div>
         <UpcomingMilestones objects={objects} />
       </div>

@@ -1,5 +1,6 @@
 ﻿import { ArrowRight } from 'lucide-react'
 import type { EKEObject } from '../../../shared/types'
+import { useStore } from '../../store'
 
 interface Props { objects: EKEObject[] }
 
@@ -12,6 +13,7 @@ const TYPE_ICON: Record<string, string> = {
 const FEATURED_TYPES = ['architecture_phase', 'apo', 'apt', 'document', 'knowledge_object']
 
 export default function KnowledgeCenterPanels({ objects }: Props) {
+  const { navigateToObjects, openObject } = useStore()
   const recent = [...objects]
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
     .slice(0, 5)
@@ -28,13 +30,13 @@ export default function KnowledgeCenterPanels({ objects }: Props) {
       <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden', flex: 1 }}>
         <div style={{ padding: '9px 12px', borderBottom: '1px solid #1a1e28', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569' }}>Recently Updated</span>
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All</button>
+          <button onClick={() => navigateToObjects()} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All</button>
         </div>
         <div>
           {recent.length === 0 ? (
             <div style={{ padding: '12px', fontSize: 11, color: '#2a3042', fontStyle: 'italic' }}>No objects in database</div>
           ) : recent.map(obj => (
-            <div key={obj.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 12px', borderBottom: '1px solid #1a1e2833', cursor: 'pointer' }}
+            <div key={obj.id} onClick={() => openObject(obj)} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 12px', borderBottom: '1px solid #1a1e2833', cursor: 'pointer' }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#1a1e28'}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
               <div style={{ width: 28, height: 28, borderRadius: 6, background: '#1a1e28', border: '1px solid #222736', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>
@@ -49,7 +51,7 @@ export default function KnowledgeCenterPanels({ objects }: Props) {
           ))}
         </div>
         <div style={{ padding: '8px 12px', borderTop: '1px solid #1a1e28' }}>
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button onClick={() => navigateToObjects()} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4 }}>
             View All Objects <ArrowRight size={10} />
           </button>
         </div>
@@ -64,7 +66,7 @@ export default function KnowledgeCenterPanels({ objects }: Props) {
           {featured.length === 0 ? (
             <div style={{ padding: '12px', fontSize: 11, color: '#2a3042', fontStyle: 'italic' }}>No collections yet</div>
           ) : featured.map(g => (
-            <div key={g.type} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', cursor: 'pointer' }}
+            <div key={g.type} onClick={() => navigateToObjects(g.type)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', cursor: 'pointer' }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#1a1e28'}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
               <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>

@@ -72,23 +72,40 @@ const STEP_LABELS = ['Choose', 'Describe', 'Connect', 'Validate', 'Create']
 
 // ─── Main Wizard ──────────────────────────────────────────────────────────────
 export default function CreationWizard() {
-  const { wizardOpen, wizardInitialType, closeWizard, loadObjects, lastSyncAt, githubConfig, setActivePage, isOffline } = useStore()
+  const { wizardOpen, wizardInitialType, editingObject, closeWizard, loadObjects, lastSyncAt, githubConfig, setActivePage, isOffline } = useStore()
   const [s, setS] = useState<WizardState>(DEFAULT_STATE)
 
   const upd = useCallback((patch: Partial<WizardState>) => setS(prev => ({ ...prev, ...patch })), [])
 
   useEffect(() => {
     if (wizardOpen) {
-      if (wizardInitialType) {
+      if (editingObject) {
+        const m = editingObject.metadata as Record<string, unknown>
+        setS({
+          ...DEFAULT_STATE,
+          objectType: editingObject.type,
+          title: editingObject.title,
+          description: editingObject.description ?? '',
+          owner: editingObject.owner ?? 'David',
+          priority: editingObject.priority ?? 'medium',
+          tags: editingObject.tags,
+          linkedObjectIds: (m.linkedObjectIds as string[]) ?? [],
+          repository: (m.repository as string) ?? 'Divad Canon',
+          metadata: m,
+          targetStatus: editingObject.status === 'archived' ? 'draft' : (editingObject.status as WizardState['targetStatus']),
+          step: 2,
+        })
+      } else if (wizardInitialType) {
         setS({ ...DEFAULT_STATE, objectType: wizardInitialType, step: 2 })
       } else {
         setS(DEFAULT_STATE)
       }
     }
-  }, [wizardOpen, wizardInitialType])
+  }, [wizardOpen, wizardInitialType, editingObject?.id])
 
   if (!wizardOpen) return null
 
+  const isEditing = !!editingObject
   const cfg = TYPE_CONFIG[s.objectType] ?? { icon: '📄', label: 'Object', color: '#3b82f6' }
   const canNext = s.step === 1 ? !!s.objectType : s.step === 2 ? !!s.title.trim() : true
 
@@ -96,7 +113,7 @@ export default function CreationWizard() {
     if (s.step < 5 && canNext) upd({ step: (s.step + 1) as WizardState['step'] })
   }
   const back = () => {
-    if (s.step > 1) upd({ step: (s.step - 1) as WizardState['step'] })
+    if (s.step > (isEditing ? 2 : 1)) upd({ step: (s.step - 1) as WizardState['step'] })
   }
 
   const syncLocked = githubConfig && !isSyncCurrent(lastSyncAt)
@@ -104,21 +121,33 @@ export default function CreationWizard() {
 
   const handleCreate = async () => {
     if (!window.divadOS) { upd({ error: 'Electron bridge not available.' }); return }
-    if (offlineLocked) { upd({ error: 'You are offline. Connect to GitHub and sync before creating objects.' }); return }
-    if (syncLocked) { upd({ error: 'Your last sync was more than 24 hours ago. Go to Repository → Sync to unlock creation.' }); return }
+    if (!isEditing && offlineLocked) { upd({ error: 'You are offline. Connect to GitHub and sync before creating objects.' }); return }
+    if (!isEditing && syncLocked) { upd({ error: 'Your last sync was more than 24 hours ago. Go to Repository → Sync to unlock creation.' }); return }
     upd({ creating: true, error: '' })
     try {
-      await window.divadOS.objects.create({
-        type: s.objectType as import('../../../shared/types').ObjectType,
-        title: s.title.trim(),
-        description: s.description.trim() || null,
-        status: s.targetStatus,
-        owner: s.owner || null,
-        tags: s.tags,
-        priority: s.priority,
-        metadata: { ...s.metadata, repository: s.repository },
-        parent_id: null,
-      })
+      if (isEditing) {
+        await window.divadOS.objects.update(editingObject.id, {
+          title: s.title.trim(),
+          description: s.description.trim() || null,
+          status: s.targetStatus,
+          owner: s.owner || null,
+          tags: s.tags,
+          priority: s.priority,
+          metadata: { ...s.metadata, repository: s.repository, linkedObjectIds: s.linkedObjectIds },
+        })
+      } else {
+        await window.divadOS.objects.create({
+          type: s.objectType as import('../../../shared/types').ObjectType,
+          title: s.title.trim(),
+          description: s.description.trim() || null,
+          status: s.targetStatus,
+          owner: s.owner || null,
+          tags: s.tags,
+          priority: s.priority,
+          metadata: { ...s.metadata, repository: s.repository, linkedObjectIds: s.linkedObjectIds },
+          parent_id: null,
+        })
+      }
       await loadObjects()
       upd({ creating: false, created: true })
       setTimeout(closeWizard, 1200)
@@ -154,10 +183,10 @@ export default function CreationWizard() {
             {s.objectType && <span style={{ fontSize: 22 }}>{cfg.icon}</span>}
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#e2e8f0' }}>
-                {s.objectType ? `New ${cfg.label}` : 'Create New Object'}
+                {isEditing ? `Edit ${cfg.label}` : s.objectType ? `New ${cfg.label}` : 'Create New Object'}
               </div>
               <div style={{ fontSize: 10, color: '#475569', marginTop: 2 }}>
-                Step {s.step} of 5 — {STEP_LABELS[s.step - 1]}
+                {isEditing ? `Editing v${editingObject.revision} — Step ${s.step} of 5 — ${STEP_LABELS[s.step - 1]}` : `Step ${s.step} of 5 — ${STEP_LABELS[s.step - 1]}`}
               </div>
             </div>
             <button onClick={() => upd({ aiAssistOpen: !s.aiAssistOpen })}
@@ -195,12 +224,12 @@ export default function CreationWizard() {
             {s.step === 2 && <Step2 s={s} upd={upd} />}
             {s.step === 3 && <Step3 s={s} upd={upd} />}
             {s.step === 4 && <Step4 s={s} upd={upd} onAI={handleAIAssist} />}
-            {s.step === 5 && <Step5 s={s} upd={upd} />}
+            {s.step === 5 && <Step5 s={s} upd={upd} isEditing={isEditing} />}
           </div>
 
           {/* Footer */}
           <div style={{ padding: '12px 20px', borderTop: '1px solid #1a1e28', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <button onClick={back} disabled={s.step === 1} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'none', border: '1px solid #222736', borderRadius: 6, cursor: s.step === 1 ? 'not-allowed' : 'pointer', fontSize: 12, color: s.step === 1 ? '#2a3042' : '#94a3b8' }}>
+            <button onClick={back} disabled={s.step <= (isEditing ? 2 : 1)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'none', border: '1px solid #222736', borderRadius: 6, cursor: s.step <= (isEditing ? 2 : 1) ? 'not-allowed' : 'pointer', fontSize: 12, color: s.step <= (isEditing ? 2 : 1) ? '#2a3042' : '#94a3b8' }}>
               <ChevronLeft size={13} /> Back
             </button>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -210,9 +239,13 @@ export default function CreationWizard() {
                     Next <ChevronRight size={13} />
                   </button>
                 : <button onClick={handleCreate} disabled={s.creating || s.created} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 20px', background: s.created ? '#22c55e' : '#3b82f6', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#fff', fontWeight: 700 }}>
-                    {s.creating ? <><Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> Creating...</>
-                     : s.created ? <><Check size={12} /> Created!</>
-                     : <><Plus size={12} /> Create {cfg.label}</>}
+                    {s.creating
+                      ? <><Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> {isEditing ? 'Saving...' : 'Creating...'}</>
+                      : s.created
+                        ? <><Check size={12} /> {isEditing ? 'Saved!' : 'Created!'}</>
+                        : isEditing
+                          ? <><Check size={12} /> Save Changes</>
+                          : <><Plus size={12} /> Create {cfg.label}</>}
                   </button>}
             </div>
           </div>
@@ -619,20 +652,20 @@ function Step4({ s, upd, onAI }: { s: WizardState; upd: (p: Partial<WizardState>
   )
 }
 
-// ─── Step 5: Create ───────────────────────────────────────────────────────────
-function Step5({ s, upd }: { s: WizardState; upd: (p: Partial<WizardState>) => void }) {
+// ─── Step 5: Create / Save ────────────────────────────────────────────────────
+function Step5({ s, upd, isEditing }: { s: WizardState; upd: (p: Partial<WizardState>) => void; isEditing?: boolean }) {
   const { lastSyncAt, githubConfig, isOffline, setActivePage, closeWizard } = useStore()
   const syncLocked = githubConfig && !isSyncCurrent(lastSyncAt)
   const cfg = TYPE_CONFIG[s.objectType] ?? { icon: '📄', label: 'Object', color: '#3b82f6' }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      {isOffline && (
+      {!isEditing && isOffline && (
         <div style={{ padding: '12px 14px', background: '#ef444411', border: '2px solid #ef444444', borderRadius: 8 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#fca5a5', marginBottom: 4 }}>🔴 Offline — Creation Locked</div>
           <div style={{ fontSize: 11, color: '#fca5a5', lineHeight: 1.6 }}>You are not connected to GitHub. You can view existing objects but cannot create new ones until you reconnect and sync.</div>
         </div>
       )}
-      {syncLocked && !isOffline && (
+      {!isEditing && syncLocked && !isOffline && (
         <div style={{ padding: '12px 14px', background: '#f59e0b11', border: '2px solid #f59e0b44', borderRadius: 8 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b', marginBottom: 4 }}>⚠️ Sync Required — Creation Locked</div>
           <div style={{ fontSize: 11, color: '#fbbf24', lineHeight: 1.6, marginBottom: 8 }}>Your last sync was more than 24 hours ago. You must sync with the repository before creating new objects.</div>
@@ -643,7 +676,7 @@ function Step5({ s, upd }: { s: WizardState; upd: (p: Partial<WizardState>) => v
         </div>
       )}
       <div>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Choose Initial Status</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>{isEditing ? 'Update Status' : 'Choose Initial Status'}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {([
             ['draft',     '🟡 Draft',              'Visible only to you. Can be edited freely. No approval required.'],
@@ -663,7 +696,7 @@ function Step5({ s, upd }: { s: WizardState; upd: (p: Partial<WizardState>) => v
       </div>
 
       <div style={{ padding: '12px 14px', background: '#0d0f14', border: '1px solid #1a1e28', borderRadius: 8 }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Creation Summary</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>{isEditing ? 'Edit Summary' : 'Creation Summary'}</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 10 }}>
           <KV k="Type" v={`${cfg.icon} ${cfg.label}`} />
           <KV k="Status" v={s.targetStatus.replace('_', ' ')} />

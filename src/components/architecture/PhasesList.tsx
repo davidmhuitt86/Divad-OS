@@ -13,14 +13,16 @@ interface Props {
   phases: EKEObject[]
   activeId: string | null
   onSelect: (ap: EKEObject) => void
+  onNewAP?: () => void
+  onViewAll?: () => void
 }
 
-export default function PhasesList({ phases, activeId, onSelect }: Props) {
+export default function PhasesList({ phases, activeId, onSelect, onNewAP, onViewAll }: Props) {
   return (
     <div style={{ width: 220, display: 'flex', flexDirection: 'column', background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, flexShrink: 0, overflow: 'hidden' }}>
       <div style={{ padding: '10px 14px', borderBottom: '1px solid #1a1e28', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569' }}>Phases (AP)</span>
-        <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', display: 'flex' }}>
+        <button onClick={onNewAP} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', display: 'flex' }}>
           <Plus size={14} />
         </button>
       </div>
@@ -79,7 +81,7 @@ export default function PhasesList({ phases, activeId, onSelect }: Props) {
       </div>
 
       <div style={{ padding: 10, borderTop: '1px solid #1a1e28' }}>
-        <button style={{ width: '100%', padding: '7px', fontSize: 11, color: '#475569', background: '#1a1e28', border: '1px solid #222736', borderRadius: 5, cursor: 'pointer' }}>
+        <button onClick={onViewAll} style={{ width: '100%', padding: '7px', fontSize: 11, color: '#475569', background: '#1a1e28', border: '1px solid #222736', borderRadius: 5, cursor: 'pointer' }}>
           View All Phases
         </button>
       </div>

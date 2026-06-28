@@ -4,6 +4,7 @@ import type { EKEObject } from '../../../shared/types'
 interface Props {
   object: EKEObject | null
   onClose: () => void
+  onOpenInWorkspace?: () => void
 }
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
@@ -15,7 +16,7 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   archived:   { bg: 'rgba(71,85,105,0.1)',   color: '#475569' },
 }
 
-export default function RightContextPanel({ object, onClose }: Props) {
+export default function RightContextPanel({ object, onClose, onOpenInWorkspace }: Props) {
   if (!object) return null
 
   const statusStyle = STATUS_COLORS[object.status] ?? STATUS_COLORS.draft
@@ -120,7 +121,7 @@ export default function RightContextPanel({ object, onClose }: Props) {
 
       {/* Actions */}
       <div style={{ padding: '10px 14px', borderTop: '1px solid #1a1e28', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <button style={{ width: '100%', padding: '7px 12px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <button onClick={onOpenInWorkspace} style={{ width: '100%', padding: '7px 12px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           <ExternalLink size={12} />
           Open in Workspace
         </button>

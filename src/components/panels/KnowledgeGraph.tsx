@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Network } from 'lucide-react'
 import type { EKEObject } from '../../../shared/types'
+import { useStore } from '../../store'
 
 interface Props {
   nodes: EKEObject[]
@@ -18,7 +19,9 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export default function KnowledgeGraph({ nodes, edges }: Props) {
+  const { openObject } = useStore()
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const positionsRef = useRef<Record<string, { x: number; y: number }>>({})
   const [hovered, setHovered] = useState<string | null>(null)
 
   useEffect(() => {
@@ -40,6 +43,7 @@ export default function KnowledgeGraph({ nodes, edges }: Props) {
         y: H / 2 + Math.sin(angle) * radius,
       }
     })
+    positionsRef.current = positions
 
     ctx.clearRect(0, 0, W, H)
 
@@ -81,9 +85,27 @@ export default function KnowledgeGraph({ nodes, edges }: Props) {
     )
   }
 
+  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    const cx = (e.clientX - rect.left) * scaleX
+    const cy = (e.clientY - rect.top)  * scaleY
+    for (const node of nodes) {
+      const p = positionsRef.current[node.id]
+      if (!p) continue
+      if (Math.sqrt((cx - p.x) ** 2 + (cy - p.y) ** 2) <= 8) {
+        openObject(node)
+        return
+      }
+    }
+  }
+
   return (
     <div className="relative w-full h-full">
-      <canvas ref={canvasRef} className="w-full h-full" />
+      <canvas ref={canvasRef} onClick={handleClick} className="w-full h-full cursor-pointer" />
       <div className="absolute bottom-2 right-2 text-[10px] text-text-muted font-mono">
         {nodes.length} nodes · {edges.length} edges
       </div>

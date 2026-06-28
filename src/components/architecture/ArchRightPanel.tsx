@@ -1,5 +1,6 @@
 import { ArrowRight } from 'lucide-react'
 import type { EKEObject, ActivityEvent } from '../../../shared/types'
+import { useStore } from '../../store'
 
 interface Props {
   objects: EKEObject[]
@@ -8,6 +9,7 @@ interface Props {
 
 
 export default function ArchRightPanel({ objects, activity }: Props) {
+  const { navigateToObjects } = useStore()
   const total     = objects.length
   const completed = objects.filter(o => o.status === 'published' || o.status === 'approved').length
   const inProgress= objects.filter(o => o.status === 'in_review').length
@@ -85,7 +87,7 @@ export default function ArchRightPanel({ objects, activity }: Props) {
       </Panel>
 
       {/* Recent Decisions */}
-      <Panel title="Recent Decisions" action={{ label: 'View All', onClick: () => {} }}>
+      <Panel title="Recent Decisions" action={{ label: 'View All', onClick: () => navigateToObjects('decision') }}>
         {decisions.length === 0 ? (
           <div style={{ fontSize: 11, color: '#2a3042', fontStyle: 'italic' }}>No decisions recorded</div>
         ) : decisions.map(d => (
@@ -98,13 +100,13 @@ export default function ArchRightPanel({ objects, activity }: Props) {
             <div style={{ fontSize: 9, color: '#2a3042', marginTop: 2 }}>{new Date(d.created_at).toLocaleDateString()}</div>
           </div>
         ))}
-        <button style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', fontSize: 10, padding: 0 }}>
+        <button onClick={() => navigateToObjects('decision')} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', fontSize: 10, padding: 0 }}>
           Go to Decision Records <ArrowRight size={10} />
         </button>
       </Panel>
 
       {/* Activity Feed */}
-      <Panel title="Activity Feed" action={{ label: 'View All', onClick: () => {} }}>
+      <Panel title="Activity Feed" action={{ label: 'View All', onClick: () => navigateToObjects() }}>
         {recentAct.length === 0 ? (
           <div style={{ fontSize: 11, color: '#2a3042', fontStyle: 'italic' }}>No recent activity</div>
         ) : recentAct.map(ev => (

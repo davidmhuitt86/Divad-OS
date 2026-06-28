@@ -1,4 +1,4 @@
-import type { EKEObject, ActivityEvent, AgentMessage, AppState } from '../../shared/types'
+import type { EKEObject, ActivityEvent, AgentMessage, AppState, Relationship } from '../../shared/types'
 
 interface DivadOSApi {
   objects: {
@@ -19,7 +19,20 @@ interface DivadOSApi {
     state: () => Promise<AppState>
   }
   graph: {
-    snapshot: () => Promise<{ nodes: EKEObject[]; edges: unknown[] }>
+    snapshot: () => Promise<{ nodes: EKEObject[]; edges: Relationship[] }>
+  }
+  relationships: {
+    list:   (objectId: string) => Promise<Relationship[]>
+    count:  () => Promise<number>
+    create: (sourceId: string, targetId: string, type: string) => Promise<Relationship>
+    delete: (id: string) => Promise<void>
+  }
+  export: {
+    savePdf:  (args: ExportArgs & { html: string }) => Promise<ExportResult>
+    saveDocx: (args: ExportArgs & { objectData: unknown; signatureData: SignatureData | null }) => Promise<ExportResult>
+    print:    (args: { html: string }) => Promise<{ success: boolean }>
+    send:     (args: { subject: string; body: string; filePath?: string }) => Promise<{ success: boolean }>
+    history:  (objectId: string) => Promise<ExportRecord[]>
   }
   config: {
     get: (key: string) => Promise<string | null>
@@ -38,6 +51,39 @@ interface DivadOSApi {
 interface GitHubCfg {
   url: string
   branch: string
+}
+
+interface ExportArgs {
+  defaultName: string
+  objectId: string
+  objectTitle: string
+  signedBy?: string
+  signedTitle?: string
+  signedAt?: string
+}
+
+interface ExportResult {
+  saved: boolean
+  filePath?: string
+}
+
+interface SignatureData {
+  include: boolean
+  name: string
+  title: string
+  date: string
+}
+
+interface ExportRecord {
+  id: string
+  object_id: string
+  object_title: string
+  format: string
+  file_path: string | null
+  signed_by: string | null
+  signed_title: string | null
+  signed_at: string | null
+  exported_at: string
 }
 
 declare global {

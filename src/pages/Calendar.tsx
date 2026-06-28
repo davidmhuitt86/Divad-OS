@@ -25,7 +25,7 @@ const MY_CALENDARS = [
 ]
 
 export default function Calendar() {
-  const { objects } = useStore()
+  const { objects, openWizard, setActivePage } = useStore()
   const [view,      setView]      = useState('Month')
   const [curDate,   setCurDate]   = useState(new Date())
 
@@ -87,8 +87,13 @@ export default function Calendar() {
       {/* Left sidebar */}
       <div style={{ width: 196, borderRight: '1px solid #1a1e28', display: 'flex', flexDirection: 'column', padding: '14px 0', flexShrink: 0, overflowY: 'auto' }}>
         <SideSection label="Quick Create">
-          {[['New Event','📅'],['New Task','✅'],['Schedule Meeting','🤝'],['New Reminder','🔔']].map(([l,i]) => (
-            <SideBtn key={l as string} label={l as string} />
+          {([
+            ['New Event',       () => openWizard('meeting')],
+            ['New Task',        () => openWizard('task')],
+            ['Schedule Meeting',() => openWizard('meeting')],
+            ['New Reminder',    () => openWizard('task')],
+          ] as [string, () => void][]).map(([l, action]) => (
+            <SideBtn key={l} label={l} onClick={action} />
           ))}
         </SideSection>
 
@@ -116,7 +121,7 @@ export default function Calendar() {
         </SideSection>
 
         <div style={{ padding: '10px 14px 0' }}>
-          <button style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>
+          <button onClick={() => setActivePage('settings')} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>
             <Settings size={11} /> Manage Calendars
           </button>
         </div>
@@ -150,7 +155,7 @@ export default function Calendar() {
           <button style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 5, cursor: 'pointer', fontSize: 11, color: '#94a3b8' }}>
             <Filter size={11} /> Filters
           </button>
-          <button style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', background: '#3b82f6', border: 'none', borderRadius: 5, cursor: 'pointer', fontSize: 11, color: '#fff', fontWeight: 600 }}>
+          <button onClick={() => openWizard('meeting')} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', background: '#3b82f6', border: 'none', borderRadius: 5, cursor: 'pointer', fontSize: 11, color: '#fff', fontWeight: 600 }}>
             <Plus size={11} /> New Event <ChevronDown size={10} />
           </button>
         </div>
@@ -230,7 +235,7 @@ export default function Calendar() {
         <div style={{ borderBottom: '1px solid #1a1e28', padding: '12px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Agenda</span>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View Full Agenda</button>
+            <button onClick={() => setView('Agenda')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View Full Agenda</button>
           </div>
           {meetings.length === 0 ? (
             <div style={{ fontSize: 10, color: '#2a3042', fontStyle: 'italic' }}>No calendar events. Add meetings as objects to see them here.</div>
@@ -249,7 +254,7 @@ export default function Calendar() {
         <div style={{ borderBottom: '1px solid #1a1e28', padding: '12px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>My Tasks</span>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All Tasks</button>
+            <button onClick={() => setActivePage('workspace')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All Tasks</button>
           </div>
           {tasks.length === 0 ? (
             <div style={{ fontSize: 10, color: '#2a3042', fontStyle: 'italic' }}>No tasks in database</div>
@@ -306,7 +311,7 @@ export default function Calendar() {
         <div style={{ padding: '12px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Upcoming Events</span>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All</button>
+            <button onClick={() => setView('Agenda')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View All</button>
           </div>
           {meetings.length === 0 ? (
             <div style={{ fontSize: 10, color: '#2a3042', fontStyle: 'italic' }}>No upcoming events</div>
@@ -334,9 +339,9 @@ function SideSection({ label, children }: { label: string; children: React.React
   )
 }
 
-function SideBtn({ label }: { label: string }) {
+function SideBtn({ label, onClick }: { label: string; onClick?: () => void }) {
   return (
-    <button style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#94a3b8', width: '100%', textAlign: 'left' }}>
+    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#94a3b8', width: '100%', textAlign: 'left' }}>
       <span style={{ color: '#3b82f6' }}>+</span> {label}
     </button>
   )

@@ -22,7 +22,7 @@ const REPO_NAMES: Record<string, string> = {
 export default function Repository() {
   const [selectedRepo, setSelectedRepo] = useState('1')
   const [activeTab, setActiveTab] = useState<'browse' | 'github'>('github')
-  const { githubConfig } = useStore()
+  const { githubConfig, openWizard, setActivePage } = useStore()
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', padding: 14, gap: 10 }}>
@@ -42,10 +42,10 @@ export default function Repository() {
               </button>
             ))}
           </div>
-          <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#94a3b8' }}>
+          <button onClick={() => setActivePage('settings')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#94a3b8' }}>
             <Upload size={13} /> Import
           </button>
-          <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#3b82f6', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#fff', fontWeight: 600 }}>
+          <button onClick={() => openWizard('document')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#3b82f6', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#fff', fontWeight: 600 }}>
             <Plus size={13} /> New <ChevronDown size={11} />
           </button>
         </div>

@@ -3,6 +3,14 @@ import { Plus, ArrowRight, Settings, ChevronRight, ChevronLeft } from 'lucide-re
 import { useStore } from '../store'
 import type { EKEObject } from '../../shared/types'
 
+const QUICK_CREATE_ACTIONS: [string, string, string | undefined][] = [
+  ['New Object',   '◈', undefined],
+  ['New Document', '📄', 'document'],
+  ['New Task',     '✅', 'task'],
+  ['New AP',       '🏗️', 'architecture_phase'],
+  ['New APT',      '🔧', 'apt'],
+]
+
 const STATUS_COLOR: Record<string, string> = {
   draft: '#3b82f6', in_review: '#f59e0b', approved: '#22c55e',
   published: '#22c55e', revised: '#a855f7', archived: '#475569',
@@ -45,7 +53,7 @@ function phaseProgress(phase: EKEObject, allObjects: EKEObject[]): number {
 }
 
 export default function Workspace() {
-  const { objects, activity } = useStore()
+  const { objects, activity, openWizard, setActivePage, openObject } = useStore()
   const [tab, setTab] = useState('Overview')
 
   const tasks      = useMemo(() => objects.filter(o => o.type === 'task'),              [objects])
@@ -85,10 +93,8 @@ export default function Workspace() {
       {/* Left sidebar */}
       <div style={{ width: 196, borderRight: '1px solid #1a1e28', display: 'flex', flexDirection: 'column', padding: '14px 0', flexShrink: 0, overflowY: 'auto' }}>
         <SideSection label="Quick Create">
-          {[
-            ['New Object', '◈'], ['New Document', '📄'], ['New Task', '✅'], ['New AP', '🏗️'], ['New APT', '🔧']
-          ].map(([label, icon]) => (
-            <button key={label as string} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#94a3b8', width: '100%', textAlign: 'left' }}>
+          {QUICK_CREATE_ACTIONS.map(([label, , type]) => (
+            <button key={label} onClick={() => openWizard(type)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#94a3b8', width: '100%', textAlign: 'left' }}>
               <span style={{ color: '#3b82f6' }}>+</span> {label}
             </button>
           ))}
@@ -122,7 +128,7 @@ export default function Workspace() {
                 </div>
               </div>
             </div>
-            <button style={{ width: '100%', padding: '5px', background: 'none', border: '1px solid #1a1e28', borderRadius: 5, cursor: 'pointer', fontSize: 10, color: '#3b82f6' }}>
+            <button onClick={() => setActivePage('settings')} style={{ width: '100%', padding: '5px', background: 'none', border: '1px solid #1a1e28', borderRadius: 5, cursor: 'pointer', fontSize: 10, color: '#3b82f6' }}>
               Manage Storage
             </button>
           </div>
@@ -138,7 +144,7 @@ export default function Workspace() {
               <h1 style={{ fontSize: 22, fontWeight: 700, color: '#e2e8f0', margin: 0, lineHeight: 1 }}>Workspace</h1>
               <p style={{ fontSize: 12, color: '#475569', margin: '4px 0 0', fontStyle: 'italic' }}>Your command center for focused engineering excellence.</p>
             </div>
-            <button style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#94a3b8' }}>
+            <button onClick={() => setActivePage('settings')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, cursor: 'pointer', fontSize: 12, color: '#94a3b8' }}>
               <Settings size={13} /> Customize Workspace
             </button>
           </div>
@@ -160,39 +166,42 @@ export default function Workspace() {
               objects={objects} tasks={tasks} documents={documents} phases={phases}
               apts={apts} activeTasks={activeTasks} activePhases={activePhases} activeApts={activeApts}
               recentWork={recentWork} recentDocs={recentDocs} recentActivity={recentActivity}
+              onOpenWizard={openWizard} onOpenObject={openObject} onSetTab={setTab} onNavigate={setActivePage}
             />
           )}
-          {tab === 'My Tasks' && <TasksTab tasks={tasks} />}
-          {tab === 'My Documents' && <DocsTab documents={documents} />}
-          {tab === 'My Objects' && <SimpleListTab objects={objects} title="All Objects" />}
-          {tab === 'My APs' && <SimpleListTab objects={phases} title="Architecture Phases" />}
-          {tab === 'My APTs' && <SimpleListTab objects={apts} title="Architecture Tasks (APT)" />}
+          {tab === 'My Tasks' && <TasksTab tasks={tasks} onOpenWizard={openWizard} onOpenObject={openObject} />}
+          {tab === 'My Documents' && <DocsTab documents={documents} onOpenObject={openObject} />}
+          {tab === 'My Objects' && <SimpleListTab objects={objects} title="All Objects" onOpenObject={openObject} />}
+          {tab === 'My APs' && <SimpleListTab objects={phases} title="Architecture Phases" onOpenObject={openObject} />}
+          {tab === 'My APTs' && <SimpleListTab objects={apts} title="Architecture Tasks (APT)" onOpenObject={openObject} />}
           {tab === 'Team Activity' && <TeamActivityTab activity={recentActivity} />}
         </div>
       </div>
 
       {/* Right panel */}
-      <RightPanel weekDays={weekDays} dayLabels={DAY_LABELS} today={today} activity={recentActivity} objects={objects} tasks={activeTasks} documents={documents} />
+      <RightPanel weekDays={weekDays} dayLabels={DAY_LABELS} today={today} activity={recentActivity} objects={objects} tasks={activeTasks} documents={documents} onOpenWizard={openWizard} onNavigate={setActivePage} />
     </div>
   )
 }
 
 // ─── Overview Tab ────────────────────────────────────────────────────────────
-function OverviewTab({ objects, tasks, documents, phases, apts, activeTasks, activePhases, activeApts, recentWork, recentDocs, recentActivity }: {
+function OverviewTab({ objects, tasks, documents, phases, apts, activeTasks, activePhases, activeApts, recentWork, recentDocs, recentActivity, onOpenWizard, onOpenObject, onSetTab, onNavigate }: {
   objects: EKEObject[]; tasks: EKEObject[]; documents: EKEObject[]; phases: EKEObject[];
   apts: EKEObject[]; activeTasks: EKEObject[]; activePhases: EKEObject[]; activeApts: EKEObject[];
   recentWork: EKEObject[]; recentDocs: EKEObject[]; recentActivity: any[]
+  onOpenWizard: (type?: string) => void; onOpenObject: (o: EKEObject) => void
+  onSetTab: (t: string) => void; onNavigate: (page: string) => void
 }) {
   // Quick access cards
-  const QUICK = [
-    { label: 'My Tasks',     count: tasks.length,    sub: tasks.length === 1 ? '1 task' : `${tasks.length} tasks` },
-    { label: 'My Documents', count: documents.length, sub: `${documents.length} docs` },
-    { label: 'My Objects',   count: objects.length,   sub: `${objects.length} objects` },
-    { label: 'Active APs',   count: activePhases.length, sub: 'phases' },
-    { label: 'Active APTs',  count: activeApts.length,   sub: 'tasks' },
-    { label: 'Calendar',     count: null, sub: 'View' },
-    { label: 'Reports',      count: null, sub: 'View' },
-    { label: 'Team',         count: null, sub: 'View' },
+  const QUICK: { label: string; count: number | null; sub: string; action: () => void }[] = [
+    { label: 'My Tasks',     count: tasks.length,       sub: tasks.length === 1 ? '1 task' : `${tasks.length} tasks`, action: () => onSetTab('My Tasks') },
+    { label: 'My Documents', count: documents.length,   sub: `${documents.length} docs`,   action: () => onSetTab('My Documents') },
+    { label: 'My Objects',   count: objects.length,     sub: `${objects.length} objects`,  action: () => onSetTab('My Objects') },
+    { label: 'Active APs',   count: activePhases.length, sub: 'phases',                   action: () => onSetTab('My APs') },
+    { label: 'Active APTs',  count: activeApts.length,  sub: 'tasks',                      action: () => onSetTab('My APTs') },
+    { label: 'Calendar',     count: null, sub: 'View',  action: () => onNavigate('calendar') },
+    { label: 'Reports',      count: null, sub: 'View',  action: () => onNavigate('reports') },
+    { label: 'Team',         count: null, sub: 'View',  action: () => onSetTab('Team Activity') },
   ]
   const ICONS = ['✅','📄','◈','🏗️','🔧','📅','📊','👥']
 
@@ -203,7 +212,7 @@ function OverviewTab({ objects, tasks, documents, phases, apts, activeTasks, act
         <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Quick Access</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 8 }}>
           {QUICK.map((q, i) => (
-            <div key={q.label} style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, padding: '12px 8px', textAlign: 'center', cursor: 'pointer' }}
+            <div key={q.label} onClick={q.action} style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, padding: '12px 8px', textAlign: 'center', cursor: 'pointer' }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = '#3b82f644'}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = '#1a1e28'}>
               <div style={{ fontSize: 22, marginBottom: 6 }}>{ICONS[i]}</div>
@@ -220,9 +229,9 @@ function OverviewTab({ objects, tasks, documents, phases, apts, activeTasks, act
         {/* Left col */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {/* Recent Work */}
-          <Panel title="Recent Work" action="View All">
+          <Panel title="Recent Work" action="View All" onAction={() => onSetTab('My Objects')}>
             {recentWork.length === 0 ? <Empty msg="No recent activity" /> : recentWork.map(o => (
-              <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #1a1e2833', cursor: 'pointer' }}>
+              <div key={o.id} onClick={() => onOpenObject(o)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #1a1e2833', cursor: 'pointer' }}>
                 <span style={{ fontSize: 14, flexShrink: 0 }}>{TYPE_ICON[o.type] ?? '◈'}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.title}</div>
@@ -232,15 +241,15 @@ function OverviewTab({ objects, tasks, documents, phases, apts, activeTasks, act
               </div>
             ))}
             {recentWork.length > 0 && (
-              <button style={{ marginTop: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
+              <button onClick={() => onSetTab('My Objects')} style={{ marginTop: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
                 View All Recent Items <ArrowRight size={10} />
               </button>
             )}
           </Panel>
           {/* Recent Docs */}
-          <Panel title="Recent Documents" action="View All">
+          <Panel title="Recent Documents" action="View All" onAction={() => onSetTab('My Documents')}>
             {recentDocs.length === 0 ? <Empty msg="No documents yet" /> : recentDocs.map(o => (
-              <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #1a1e2833', cursor: 'pointer' }}>
+              <div key={o.id} onClick={() => onOpenObject(o)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #1a1e2833', cursor: 'pointer' }}>
                 <div style={{ width: 28, height: 28, borderRadius: 5, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>📄</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.title}</div>
@@ -254,12 +263,12 @@ function OverviewTab({ objects, tasks, documents, phases, apts, activeTasks, act
         {/* Center col */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {/* My Tasks */}
-          <Panel title="My Tasks" action="View All" extra={
-            <button style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: '#3b82f6', border: 'none', borderRadius: 5, cursor: 'pointer', fontSize: 10, color: '#fff', fontWeight: 600 }}>
+          <Panel title="My Tasks" action="View All" onAction={() => onSetTab('My Tasks')} extra={
+            <button onClick={() => onOpenWizard('task')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: '#3b82f6', border: 'none', borderRadius: 5, cursor: 'pointer', fontSize: 10, color: '#fff', fontWeight: 600 }}>
               <Plus size={10} /> New Task
             </button>
           }>
-            <TaskFilterRow tasks={tasks} />
+            <TaskFilterRow tasks={tasks} onOpen={onOpenObject} />
           </Panel>
           {/* Work Timeline */}
           <Panel title="My Work Timeline" action={null}>
@@ -282,7 +291,7 @@ function OverviewTab({ objects, tasks, documents, phases, apts, activeTasks, act
               </div>
             ))}
             {recentActivity.length > 0 && (
-              <button style={{ marginTop: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
+              <button onClick={() => onSetTab('Team Activity')} style={{ marginTop: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
                 View Full Activity Timeline <ArrowRight size={10} />
               </button>
             )}
@@ -290,7 +299,7 @@ function OverviewTab({ objects, tasks, documents, phases, apts, activeTasks, act
         </div>
 
         {/* Right col */}
-        <Panel title="Active Projects / Phases" action="View All">
+        <Panel title="Active Projects / Phases" action="View All" onAction={() => onSetTab('My APs')}>
           {activePhases.length === 0 && activeApts.length === 0 ? (
             <Empty msg="No active phases or tasks" />
           ) : (
@@ -304,7 +313,7 @@ function OverviewTab({ objects, tasks, documents, phases, apts, activeTasks, act
             </>
           )}
           {(activePhases.length > 0 || activeApts.length > 0) && (
-            <button style={{ marginTop: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
+            <button onClick={() => onSetTab('My APs')} style={{ marginTop: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
               View All Projects <ArrowRight size={10} />
             </button>
           )}
@@ -335,7 +344,7 @@ function ProjectRow({ obj, allObjects }: { obj: EKEObject; allObjects: EKEObject
   )
 }
 
-function TaskFilterRow({ tasks }: { tasks: EKEObject[] }) {
+function TaskFilterRow({ tasks, onOpen }: { tasks: EKEObject[]; onOpen?: (o: EKEObject) => void }) {
   const [filter, setFilter] = useState('all')
   const inProgress  = tasks.filter(o => o.status === 'in_review')
   const drafts      = tasks.filter(o => o.status === 'draft')
@@ -361,7 +370,7 @@ function TaskFilterRow({ tasks }: { tasks: EKEObject[] }) {
         ))}
       </div>
       {visible.length === 0 ? <Empty msg="No tasks" /> : visible.slice(0, 5).map(t => (
-        <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #1a1e2833', cursor: 'pointer' }}>
+        <div key={t.id} onClick={() => onOpen?.(t)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #1a1e2833', cursor: 'pointer' }}>
           <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid #3b82f6', flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
@@ -375,7 +384,7 @@ function TaskFilterRow({ tasks }: { tasks: EKEObject[] }) {
       ))}
       {visible.length > 5 && (
         <button style={{ marginTop: 6, background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#3b82f6', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
-          View All Tasks <ArrowRight size={10} />
+          +{visible.length - 5} more tasks
         </button>
       )}
     </>
@@ -383,19 +392,19 @@ function TaskFilterRow({ tasks }: { tasks: EKEObject[] }) {
 }
 
 // ─── Sub-tab pages ────────────────────────────────────────────────────────────
-function TasksTab({ tasks }: { tasks: EKEObject[] }) {
+function TasksTab({ tasks, onOpenWizard, onOpenObject }: { tasks: EKEObject[]; onOpenWizard?: (t?: string) => void; onOpenObject?: (o: EKEObject) => void }) {
   return (
     <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden' }}>
       <div style={{ padding: '10px 14px', borderBottom: '1px solid #1a1e28', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>All Tasks ({tasks.length})</span>
-        <button style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', background: '#3b82f6', border: 'none', borderRadius: 5, cursor: 'pointer', fontSize: 11, color: '#fff', fontWeight: 600 }}>
+        <button onClick={() => onOpenWizard?.('task')} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', background: '#3b82f6', border: 'none', borderRadius: 5, cursor: 'pointer', fontSize: 11, color: '#fff', fontWeight: 600 }}>
           <Plus size={11} /> New Task
         </button>
       </div>
       {tasks.length === 0 ? (
         <div style={{ padding: '32px', textAlign: 'center', color: '#2a3042', fontStyle: 'italic' }}>No tasks in database</div>
       ) : tasks.map(t => (
-        <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid #1a1e2866', cursor: 'pointer' }}
+        <div key={t.id} onClick={() => onOpenObject?.(t)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid #1a1e2866', cursor: 'pointer' }}
           onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#13161e'}
           onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
           <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid ' + (STATUS_COLOR[t.status] ?? '#475569'), flexShrink: 0 }} />
@@ -413,7 +422,7 @@ function TasksTab({ tasks }: { tasks: EKEObject[] }) {
   )
 }
 
-function DocsTab({ documents }: { documents: EKEObject[] }) {
+function DocsTab({ documents, onOpenObject }: { documents: EKEObject[]; onOpenObject?: (o: EKEObject) => void }) {
   return (
     <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden' }}>
       <div style={{ padding: '10px 14px', borderBottom: '1px solid #1a1e28' }}>
@@ -422,7 +431,7 @@ function DocsTab({ documents }: { documents: EKEObject[] }) {
       {documents.length === 0 ? (
         <div style={{ padding: '32px', textAlign: 'center', color: '#2a3042', fontStyle: 'italic' }}>No documents in database</div>
       ) : documents.map(d => (
-        <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid #1a1e2866', cursor: 'pointer' }}
+        <div key={d.id} onClick={() => onOpenObject?.(d)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid #1a1e2866', cursor: 'pointer' }}
           onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#1a1e28'}
           onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
           <div style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>📄</div>
@@ -439,7 +448,7 @@ function DocsTab({ documents }: { documents: EKEObject[] }) {
   )
 }
 
-function SimpleListTab({ objects, title }: { objects: EKEObject[]; title: string }) {
+function SimpleListTab({ objects, title, onOpenObject }: { objects: EKEObject[]; title: string; onOpenObject?: (o: EKEObject) => void }) {
   return (
     <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden' }}>
       <div style={{ padding: '10px 14px', borderBottom: '1px solid #1a1e28' }}>
@@ -448,7 +457,7 @@ function SimpleListTab({ objects, title }: { objects: EKEObject[]; title: string
       {objects.length === 0 ? (
         <div style={{ padding: '32px', textAlign: 'center', color: '#2a3042', fontStyle: 'italic' }}>No objects of this type in database</div>
       ) : objects.map(o => (
-        <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid #1a1e2866', cursor: 'pointer' }}
+        <div key={o.id} onClick={() => onOpenObject?.(o)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: '1px solid #1a1e2866', cursor: 'pointer' }}
           onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#1a1e28'}
           onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
           <span style={{ fontSize: 16 }}>{TYPE_ICON[o.type] ?? '◈'}</span>
@@ -489,9 +498,10 @@ function TeamActivityTab({ activity }: { activity: any[] }) {
 }
 
 // ─── Right Panel ──────────────────────────────────────────────────────────────
-function RightPanel({ weekDays, dayLabels, today, activity, objects, tasks, documents }: {
+function RightPanel({ weekDays, dayLabels, today, activity, objects, tasks, documents, onOpenWizard, onNavigate }: {
   weekDays: Date[]; dayLabels: string[]; today: Date; activity: any[];
   objects: EKEObject[]; tasks: EKEObject[]; documents: EKEObject[]
+  onOpenWizard?: (t?: string) => void; onNavigate?: (page: string) => void
 }) {
   const inProgressTasks = tasks.filter(o => o.status === 'in_review' || o.status === 'draft')
 
@@ -501,7 +511,7 @@ function RightPanel({ weekDays, dayLabels, today, activity, objects, tasks, docu
       <div style={{ borderBottom: '1px solid #1a1e28', padding: '12px 14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <span style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Calendar</span>
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View Full Calendar</button>
+          <button onClick={() => onNavigate?.('calendar')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>View Full Calendar</button>
         </div>
         <div style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', textAlign: 'center', marginBottom: 8 }}>
           {weekDays[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – {weekDays[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -518,7 +528,7 @@ function RightPanel({ weekDays, dayLabels, today, activity, objects, tasks, docu
           })}
         </div>
         <div style={{ fontSize: 10, color: '#2a3042', fontStyle: 'italic', textAlign: 'center', marginBottom: 6 }}>No calendar events</div>
-        <button style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '5px', background: 'none', border: '1px dashed #1a1e28', borderRadius: 5, cursor: 'pointer', fontSize: 10, color: '#475569' }}>
+        <button onClick={() => onOpenWizard?.('meeting')} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '5px', background: 'none', border: '1px dashed #1a1e28', borderRadius: 5, cursor: 'pointer', fontSize: 10, color: '#475569' }}>
           <Plus size={10} /> New Event
         </button>
       </div>
@@ -576,14 +586,14 @@ function RightPanel({ weekDays, dayLabels, today, activity, objects, tasks, docu
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function Panel({ title, children, action, extra }: { title: string; children: React.ReactNode; action?: string | null; extra?: React.ReactNode }) {
+function Panel({ title, children, action, onAction, extra }: { title: string; children: React.ReactNode; action?: string | null; onAction?: () => void; extra?: React.ReactNode }) {
   return (
     <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden' }}>
       <div style={{ padding: '9px 12px', borderBottom: '1px solid #1a1e28', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569' }}>{title}</span>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {extra}
-          {action && <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>{action}</button>}
+          {action && <button onClick={onAction} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, color: '#3b82f6' }}>{action}</button>}
         </div>
       </div>
       <div style={{ padding: '10px 12px' }}>{children}</div>

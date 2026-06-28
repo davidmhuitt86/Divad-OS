@@ -33,9 +33,24 @@ interface Store {
   activePage: string
   setActivePage: (page: string) => void
 
+  objectTypeFilter: string | null
+  objectStatusFilter: string | null
+  navigateToObjects: (type?: string, status?: string) => void
+  clearObjectFilters: () => void
+
+  notificationsOpen: boolean
+  toggleNotifications: () => void
+  closeNotifications: () => void
+
+  userMenuOpen: boolean
+  toggleUserMenu: () => void
+  closeUserMenu: () => void
+
   wizardOpen: boolean
   wizardInitialType: string | null
+  editingObject: EKEObject | null
   openWizard: (type?: string) => void
+  openWizardEdit: (obj: EKEObject) => void
   closeWizard: () => void
 
   viewingObject: EKEObject | null
@@ -56,7 +71,7 @@ interface Store {
 
 export const useStore = create<Store>((set, get) => ({
   appState: {
-    currentAP: null, currentAPO: null, currentAPT: null,
+    currentAP: null, currentAPM: null, currentAPO: null, currentAPT: null,
     currentMIT: null, mission: 'Build the Engineering Knowledge Engine',
   },
   loadAppState: async () => {
@@ -112,10 +127,25 @@ export const useStore = create<Store>((set, get) => ({
   activePage: 'home',
   setActivePage: (page) => set({ activePage: page }),
 
+  objectTypeFilter: null,
+  objectStatusFilter: null,
+  navigateToObjects: (type, status) => set({ activePage: 'objects', objectTypeFilter: type ?? null, objectStatusFilter: status ?? null }),
+  clearObjectFilters: () => set({ objectTypeFilter: null, objectStatusFilter: null }),
+
+  notificationsOpen: false,
+  toggleNotifications: () => set(s => ({ notificationsOpen: !s.notificationsOpen, userMenuOpen: false })),
+  closeNotifications: () => set({ notificationsOpen: false }),
+
+  userMenuOpen: false,
+  toggleUserMenu: () => set(s => ({ userMenuOpen: !s.userMenuOpen, notificationsOpen: false })),
+  closeUserMenu: () => set({ userMenuOpen: false }),
+
   wizardOpen: false,
   wizardInitialType: null,
-  openWizard: (type) => set({ wizardOpen: true, wizardInitialType: type ?? null }),
-  closeWizard: () => set({ wizardOpen: false, wizardInitialType: null }),
+  editingObject: null,
+  openWizard: (type) => set({ wizardOpen: true, wizardInitialType: type ?? null, editingObject: null }),
+  openWizardEdit: (obj) => set({ wizardOpen: true, wizardInitialType: obj.type, editingObject: obj }),
+  closeWizard: () => set({ wizardOpen: false, wizardInitialType: null, editingObject: null }),
 
   viewingObject: null,
   openObject: (obj) => set({ viewingObject: obj }),

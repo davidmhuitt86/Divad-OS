@@ -32,6 +32,19 @@ const api = {
     configGet:    () => ipcRenderer.invoke('github:config-get'),
     configSave:   (cfg: unknown) => ipcRenderer.invoke('github:config-save', cfg),
   },
+  relationships: {
+    list:   (objectId: string) => ipcRenderer.invoke('relationships:list', { objectId }),
+    count:  () => ipcRenderer.invoke('relationships:count'),
+    create: (sourceId: string, targetId: string, type: string) => ipcRenderer.invoke('relationships:create', { sourceId, targetId, type }),
+    delete: (id: string) => ipcRenderer.invoke('relationships:delete', { id }),
+  },
+  export: {
+    savePdf:  (args: unknown) => ipcRenderer.invoke('export:save-pdf', args),
+    saveDocx: (args: unknown) => ipcRenderer.invoke('export:save-docx', args),
+    print:    (args: unknown) => ipcRenderer.invoke('export:print', args),
+    send:     (args: unknown) => ipcRenderer.invoke('export:send', args),
+    history:  (objectId: string) => ipcRenderer.invoke('export:history', { objectId }),
+  },
   on: (channel: string, cb: (...args: unknown[]) => void) => {
     ipcRenderer.on(channel, (_e, ...args) => cb(...args))
     return () => ipcRenderer.removeListener(channel, cb)

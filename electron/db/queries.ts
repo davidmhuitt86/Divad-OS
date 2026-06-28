@@ -117,6 +117,22 @@ export async function getAllRelationships(): Promise<Relationship[]> {
   return all<Relationship>('SELECT * FROM relationships')
 }
 
+export async function listRelationships(objectId: string): Promise<Relationship[]> {
+  return all<Relationship>(
+    'SELECT * FROM relationships WHERE source_id = ? OR target_id = ? ORDER BY created_at DESC',
+    [objectId, objectId]
+  )
+}
+
+export async function deleteRelationship(id: string): Promise<void> {
+  await run('DELETE FROM relationships WHERE id = ?', [id])
+}
+
+export async function countAllRelationships(): Promise<number> {
+  const rows = await all<{ n: number }>('SELECT COUNT(*) as n FROM relationships')
+  return rows[0]?.n ?? 0
+}
+
 // ── Activity Log ──────────────────────────────────────────────────────────────
 
 export async function logActivity(
@@ -170,20 +186,54 @@ export async function setConfig(key: string, value: string) {
   await run('INSERT OR REPLACE INTO app_config (key,value) VALUES (?,?)', [key, value])
 }
 
+// ── Export Records ────────────────────────────────────────────────────────────
+
+export interface ExportRecord {
+  id: string
+  object_id: string
+  object_title: string
+  format: string
+  file_path: string | null
+  signed_by: string | null
+  signed_title: string | null
+  signed_at: string | null
+  exported_at: string
+}
+
+export async function createExportRecord(data: Omit<ExportRecord, 'id' | 'exported_at'>): Promise<ExportRecord> {
+  const record: ExportRecord = { ...data, id: randomUUID(), exported_at: now() }
+  await run(
+    `INSERT INTO export_records (id,object_id,object_title,format,file_path,signed_by,signed_title,signed_at,exported_at)
+     VALUES (?,?,?,?,?,?,?,?,?)`,
+    [record.id, record.object_id, record.object_title, record.format,
+     record.file_path, record.signed_by, record.signed_title, record.signed_at, record.exported_at]
+  )
+  persist()
+  return record
+}
+
+export async function listExportRecords(objectId: string): Promise<ExportRecord[]> {
+  return all<ExportRecord>(
+    `SELECT * FROM export_records WHERE object_id=? ORDER BY exported_at DESC LIMIT 50`,
+    [objectId]
+  )
+}
+
 // ── App State ─────────────────────────────────────────────────────────────────
 
 export async function getAppState() {
-  const [apId, apoId, aptId, mitId, mission] = await Promise.all([
-    getConfig('current_ap_id'), getConfig('current_apo_id'),
+  const [apId, apmId, apoId, aptId, mitId, mission] = await Promise.all([
+    getConfig('current_ap_id'), getConfig('current_apm_id'), getConfig('current_apo_id'),
     getConfig('current_apt_id'), getConfig('current_mit_id'), getConfig('mission'),
   ])
-  const [currentAP, currentAPO, currentAPT, currentMIT] = await Promise.all([
+  const [currentAP, currentAPM, currentAPO, currentAPT, currentMIT] = await Promise.all([
     apId  ? getObject(apId)  : Promise.resolve(null),
+    apmId ? getObject(apmId) : Promise.resolve(null),
     apoId ? getObject(apoId) : Promise.resolve(null),
     aptId ? getObject(aptId) : Promise.resolve(null),
     mitId ? getObject(mitId) : Promise.resolve(null),
   ])
-  return { currentAP, currentAPO, currentAPT, currentMIT, mission: mission ?? 'Build the Engineering Knowledge Engine' }
+  return { currentAP, currentAPM, currentAPO, currentAPT, currentMIT, mission: mission ?? 'Build the Engineering Knowledge Engine' }
 }
 
 // ── Graph Snapshot ────────────────────────────────────────────────────────────
