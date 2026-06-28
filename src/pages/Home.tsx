@@ -5,13 +5,12 @@ import ActivityFeed from '../components/panels/ActivityFeed'
 import SystemOverview from '../components/panels/SystemOverview'
 import OpenItems from '../components/panels/OpenItems'
 import KnowledgeGraph from '../components/panels/KnowledgeGraph'
-import QuickActions from '../components/panels/QuickActions'
 import LayoutPanel from '../components/layout/LayoutPanel'
 import LayoutLock from '../components/layout/LayoutLock'
 import { usePageLayout } from '../hooks/usePageLayout'
 import type { EKEObject } from '../../shared/types'
 
-const PANELS = ['missionBrief', 'activityFeed', 'systemOverview', 'openItems', 'knowledgeGraph', 'quickActions']
+const PANELS = ['missionBrief', 'activityFeed', 'systemOverview', 'openItems', 'knowledgeGraph']
 
 export default function Home() {
   const { loadAppState, loadActivity, loadObjects } = useStore()
@@ -55,9 +54,9 @@ export default function Home() {
         ? { display: 'flex', flexWrap: 'wrap', gap: 10, flex: 1, minHeight: 0 }
         : { display: 'flex', gap: 10, flex: 1, minHeight: 0 }
       }>
-        {layout.sorted.filter(id => ['knowledgeGraph','quickActions'].includes(id)).map(id => (
+        {layout.sorted.filter(id => ['knowledgeGraph'].includes(id)).map(id => (
           <LayoutPanel key={id} id={id} layout={layout}
-            lockedStyle={id === 'knowledgeGraph' ? { flex: 1, display: 'flex', flexDirection: 'column' } : { width: 180, flexShrink: 0 }}>
+            lockedStyle={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             {id === 'knowledgeGraph' && (
               <div className="panel" style={{ width: '100%', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <div className="panel-header">
@@ -69,7 +68,6 @@ export default function Home() {
                 </div>
               </div>
             )}
-            {id === 'quickActions' && <QuickActions />}
           </LayoutPanel>
         ))}
       </div>
