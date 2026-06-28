@@ -13,7 +13,7 @@ export default function OpenItems() {
   const hasItems = decisions.length || risks.length || issues.length || inProgress.length
 
   return (
-    <div className="panel flex flex-col">
+    <div className="panel flex flex-col h-full">
       <div className="panel-header">
         <span className="panel-title">Open Items</span>
       </div>
@@ -23,7 +23,7 @@ export default function OpenItems() {
           <span>No open items</span>
         </div>
       ) : (
-        <div className="divide-y divide-surface-700">
+        <div className="flex-1 overflow-y-auto divide-y divide-surface-700" style={{ minHeight: 0 }}>
           <Item icon={<GitBranch size={11} />} label="Open Decisions" count={decisions.length} color="purple" onClick={() => navigateToObjects('decision')} />
           <Item icon={<Shield size={11} />} label="Open Risks" count={risks.length} color="amber" onClick={() => navigateToObjects('risk')} />
           <Item icon={<AlertTriangle size={11} />} label="Open Issues" count={issues.length} color="red" onClick={() => navigateToObjects('requirement')} />

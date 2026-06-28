@@ -18,7 +18,7 @@ export function OpenRisks({ objects, onSelect, onViewAll }: { objects: EKEObject
           <span>No open risks</span>
         </div>
       ) : (
-        <div style={{ padding: '6px 0' }}>
+        <div style={{ padding: '6px 0', overflowY: 'auto', maxHeight: 220 }}>
           {risks.map(risk => (
             <button
               key={risk.id}
@@ -60,7 +60,7 @@ export function DecisionsPending({ objects, onSelect, onViewAll }: { objects: EK
           <span>No pending decisions</span>
         </div>
       ) : (
-        <div style={{ padding: '6px 0' }}>
+        <div style={{ padding: '6px 0', overflowY: 'auto', maxHeight: 220 }}>
           {decisions.map(dec => (
             <button
               key={dec.id}

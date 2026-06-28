@@ -275,7 +275,7 @@ export default function Objects() {
             <div style={{ padding: '8px 12px', borderBottom: '1px solid #1a1e28' }}>
               <span style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Object Status Overview</span>
             </div>
-            <div style={{ padding: '10px 12px' }}>
+            <div style={{ padding: '10px 12px', overflowY: 'auto', maxHeight: 180 }}>
               {Object.keys(statusCounts).length === 0 ? (
                 <div style={{ fontSize: 10, color: '#2a3042', fontStyle: 'italic' }}>No objects yet</div>
               ) : Object.entries(statusCounts).map(([s, c]) => (
@@ -293,7 +293,7 @@ export default function Objects() {
             <div style={{ padding: '8px 12px', borderBottom: '1px solid #1a1e28', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Recently Created</span>
             </div>
-            <div style={{ padding: '4px 0' }}>
+            <div style={{ padding: '4px 0', overflowY: 'auto', maxHeight: 200 }}>
               {recentObjects.length === 0 ? (
                 <div style={{ padding: '12px', fontSize: 10, color: '#2a3042', fontStyle: 'italic' }}>No objects yet</div>
               ) : recentObjects.map(o => (

@@ -60,11 +60,11 @@ export default function KnowledgeDomains({ objects }: Props) {
   return (
     <div style={{ width: 260, display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
       {/* Object Types */}
-      <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden', flex: 1 }}>
-        <div style={{ padding: '9px 12px', borderBottom: '1px solid #1a1e28' }}>
+      <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '9px 12px', borderBottom: '1px solid #1a1e28', flexShrink: 0 }}>
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569' }}>Object Types</span>
         </div>
-        <div style={{ padding: '6px 0' }}>
+        <div style={{ padding: '6px 0', flex: 1, overflowY: 'auto', minHeight: 0 }}>
           {sorted.length === 0 ? (
             <div style={{ padding: '12px', fontSize: 11, color: '#2a3042', fontStyle: 'italic' }}>No objects in database</div>
           ) : sorted.slice(0, 8).map(([type, objs]) => {

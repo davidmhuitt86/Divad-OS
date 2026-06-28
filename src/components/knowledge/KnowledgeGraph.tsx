@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 
 const NODES = [
@@ -34,9 +34,33 @@ const LEGEND = [
 
 export default function KnowledgeGraph() {
   const [mode, setMode] = useState<'2D'|'3D'>('2D')
+  const [scale, setScale] = useState(1)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const dragRef = useRef<{ active: boolean; lastX: number; lastY: number }>({ active: false, lastX: 0, lastY: 0 })
   const W = 400; const H = 320
 
   const pos = (n: typeof NODES[0]) => ({ x: n.x * W, y: n.y * H })
+
+  const onWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    const factor = e.deltaY < 0 ? 1.1 : 0.9
+    setScale(s => Math.max(0.2, Math.min(6, s * factor)))
+  }
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY }
+  }
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!dragRef.current.active) return
+    const dx = e.clientX - dragRef.current.lastX
+    const dy = e.clientY - dragRef.current.lastY
+    dragRef.current.lastX = e.clientX
+    dragRef.current.lastY = e.clientY
+    setPan(p => ({ x: p.x + dx, y: p.y + dy }))
+  }
+
+  const onMouseUp = () => { dragRef.current.active = false }
 
   return (
     <div style={{ flex: 1, background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -46,43 +70,53 @@ export default function KnowledgeGraph() {
         {(['2D','3D'] as const).map(m => (
           <button key={m} onClick={() => setMode(m)} style={{ padding: '3px 8px', fontSize: 10, fontWeight: 600, borderRadius: 4, border: '1px solid ' + (mode===m ? '#3b82f6' : '#1a1e28'), background: mode===m ? 'rgba(59,130,246,0.15)' : 'transparent', color: mode===m ? '#3b82f6' : '#475569', cursor: 'pointer' }}>{m}</button>
         ))}
-        {[ZoomIn, ZoomOut, Maximize2].map((Icon, i) => (
-          <button key={i} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex', padding: 2 }}><Icon size={12} /></button>
-        ))}
+        <button onClick={() => setScale(s => Math.min(6, s * 1.2))} title="Zoom in" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex', padding: 3 }}><ZoomIn size={12} /></button>
+        <button onClick={() => setScale(s => Math.max(0.2, s / 1.2))} title="Zoom out" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex', padding: 3 }}><ZoomOut size={12} /></button>
+        <button onClick={() => { setScale(1); setPan({ x: 0, y: 0 }) }} title="Reset view" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex', padding: 3 }}><Maximize2 size={12} /></button>
+        <span style={{ fontSize: 9, color: '#2a3042', fontFamily: 'monospace' }}>{Math.round(scale * 100)}%</span>
         <select style={{ background: '#1a1e28', border: '1px solid #222736', borderRadius: 4, color: '#94a3b8', fontSize: 10, padding: '3px 6px', cursor: 'pointer' }}>
           <option>All Domains</option>
         </select>
       </div>
 
-      {/* Graph SVG */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+      {/* Graph SVG with pan/zoom */}
+      <div
+        style={{ flex: 1, position: 'relative', overflow: 'hidden', cursor: 'grab' }}
+        onWheel={onWheel}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+      >
         <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet">
-          {/* Edges */}
-          {EDGES.map(([a, b]) => {
-            const na = NODES.find(n => n.id === a)!
-            const nb = NODES.find(n => n.id === b)!
-            const pa = pos(na); const pb = pos(nb)
-            return <line key={a+b} x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y} stroke="#1a1e28" strokeWidth={1.5} strokeDasharray={na.id==='center'||nb.id==='center' ? '' : '3,3'} />
-          })}
-          {/* Nodes */}
-          {NODES.map(n => {
-            const p = pos(n)
-            return (
-              <g key={n.id} style={{ cursor: 'pointer' }}>
-                {n.r > 10 && <circle cx={p.x} cy={p.y} r={n.r + 6} fill={n.color + '18'} />}
-                <circle cx={p.x} cy={p.y} r={n.r} fill={n.id === 'center' ? '#13161e' : '#13161e'} stroke={n.color} strokeWidth={n.id==='center' ? 2.5 : 1.5} />
-                {n.id === 'center' && <circle cx={p.x} cy={p.y} r={n.r - 8} fill={n.color + '33'} />}
-                {n.label && (
-                  <text x={p.x} y={p.y + n.r + 11} textAnchor="middle" fill="#94a3b8" fontSize={8} fontFamily="Inter, system-ui, sans-serif">
-                    {n.label}
-                  </text>
-                )}
-                {n.id === 'center' && (
-                  <text x={p.x} y={p.y + 3} textAnchor="middle" fill="#3b82f6" fontSize={7} fontWeight="700" fontFamily="Inter, system-ui">Universal Object</text>
-                )}
-              </g>
-            )
-          })}
+          <g transform={`translate(${pan.x},${pan.y}) scale(${scale})`} style={{ transformOrigin: `${W/2}px ${H/2}px` }}>
+            {/* Edges */}
+            {EDGES.map(([a, b]) => {
+              const na = NODES.find(n => n.id === a)!
+              const nb = NODES.find(n => n.id === b)!
+              const pa = pos(na); const pb = pos(nb)
+              return <line key={a+b} x1={pa.x} y1={pa.y} x2={pb.x} y2={pb.y} stroke="#1a1e28" strokeWidth={1.5} strokeDasharray={na.id==='center'||nb.id==='center' ? '' : '3,3'} />
+            })}
+            {/* Nodes */}
+            {NODES.map(n => {
+              const p = pos(n)
+              return (
+                <g key={n.id} style={{ cursor: 'pointer' }}>
+                  {n.r > 10 && <circle cx={p.x} cy={p.y} r={n.r + 6} fill={n.color + '18'} />}
+                  <circle cx={p.x} cy={p.y} r={n.r} fill="#13161e" stroke={n.color} strokeWidth={n.id==='center' ? 2.5 : 1.5} />
+                  {n.id === 'center' && <circle cx={p.x} cy={p.y} r={n.r - 8} fill={n.color + '33'} />}
+                  {n.label && (
+                    <text x={p.x} y={p.y + n.r + 11} textAnchor="middle" fill="#94a3b8" fontSize={8} fontFamily="Inter, system-ui, sans-serif">
+                      {n.label}
+                    </text>
+                  )}
+                  {n.id === 'center' && (
+                    <text x={p.x} y={p.y + 3} textAnchor="middle" fill="#3b82f6" fontSize={7} fontWeight="700" fontFamily="Inter, system-ui">Universal Object</text>
+                  )}
+                </g>
+              )
+            })}
+          </g>
         </svg>
       </div>
 

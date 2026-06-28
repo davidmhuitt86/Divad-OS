@@ -10,7 +10,7 @@ export default function BottomPanels({ activity }: { activity: ActivityEvent[] }
   const [tab, setTab] = useState('ACTIVITY FEED')
 
   return (
-    <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', borderBottom: '1px solid #1a1e28', flexShrink: 0 }}>
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}

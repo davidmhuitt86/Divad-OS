@@ -100,11 +100,11 @@ export default function KnowledgeRightPanel({ objects }: Props) {
       </div>
 
       {/* Recent Activity */}
-      <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden', flex: 1 }}>
-        <div style={{ padding: '9px 12px', borderBottom: '1px solid #1a1e28' }}>
+      <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '9px 12px', borderBottom: '1px solid #1a1e28', flexShrink: 0 }}>
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569' }}>Recently Updated</span>
         </div>
-        <div style={{ padding: '6px 0' }}>
+        <div style={{ padding: '6px 0', flex: 1, overflowY: 'auto', minHeight: 0 }}>
           {recentActivity.length === 0 ? (
             <div style={{ padding: '12px', fontSize: 11, color: '#2a3042', fontStyle: 'italic' }}>No recent activity</div>
           ) : recentActivity.map(o => (

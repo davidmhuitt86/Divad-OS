@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 import type { EKEObject } from '../../../shared/types'
 
@@ -32,6 +32,9 @@ function safeSub(obj: EKEObject | null | undefined, prefix: string, maxLen: numb
 
 export default function ArchGraph({ activeAP, apos, apts }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const dragRef = useRef<{ active: boolean; lastX: number; lastY: number }>({ active: false, lastX: 0, lastY: 0 })
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -45,6 +48,10 @@ export default function ArchGraph({ activeAP, apos, apts }: Props) {
     ctx.clearRect(0, 0, W, H)
 
     if (!activeAP && apos.length === 0) return
+
+    ctx.save()
+    ctx.translate(pan.x, pan.y)
+    ctx.scale(zoom, zoom)
 
     const PAD    = 24
     const NODE_W = 110
@@ -60,7 +67,7 @@ export default function ArchGraph({ activeAP, apos, apts }: Props) {
 
     drawNode(ctx, apX, apY, apLabel, apSub || 'Active Phase', '#3b82f6', 'rgba(59,130,246,0.25)', NODE_W + 20, NODE_H)
 
-    if (apos.length === 0) return
+    if (apos.length === 0) { ctx.restore(); return }
 
     apos.forEach((apo, col) => {
       if (!apo) return
@@ -70,7 +77,6 @@ export default function ArchGraph({ activeAP, apos, apts }: Props) {
       const apoLabel = safeTitle(apo, 'APO-', `APO-${String(col + 1).padStart(3, '0')}`)
       const apoSub   = safeSub(apo, 'APO-', 16)
 
-      // Line AP → APO
       ctx.strokeStyle = '#222736'
       ctx.lineWidth = 1
       ctx.setLineDash([3, 4])
@@ -101,21 +107,52 @@ export default function ArchGraph({ activeAP, apos, apts }: Props) {
         drawNode(ctx, x, ty, aptLabel, aptSub, tcolor, tcolor + '22', NODE_W - 8, NODE_H - 4, apt.status)
       })
     })
-  }, [activeAP, apos, apts])
+
+    ctx.restore()
+  }, [activeAP, apos, apts, pan, zoom])
+
+  const onWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    const factor = e.deltaY < 0 ? 1.1 : 0.9
+    setZoom(z => Math.max(0.2, Math.min(6, z * factor)))
+  }
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY }
+  }
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!dragRef.current.active) return
+    const dx = e.clientX - dragRef.current.lastX
+    const dy = e.clientY - dragRef.current.lastY
+    dragRef.current.lastX = e.clientX
+    dragRef.current.lastY = e.clientY
+    setPan(p => ({ x: p.x + dx, y: p.y + dy }))
+  }
+
+  const onMouseUp = () => { dragRef.current.active = false }
 
   return (
     <div style={{ flex: 1, background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
       <div style={{ padding: '10px 14px', borderBottom: '1px solid #1a1e28', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569' }}>Architecture Overview (Graph)</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button style={{ background: '#1a1e28', border: '1px solid #222736', borderRadius: 4, padding: '4px 8px', fontSize: 11, color: '#94a3b8', cursor: 'pointer' }}>Fit View</button>
-          {([ZoomIn, ZoomOut, Maximize2] as const).map((Icon, i) => (
-            <button key={i} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex' }}><Icon size={13} /></button>
-          ))}
+          <span style={{ fontSize: 9, color: '#2a3042', fontFamily: 'monospace' }}>{Math.round(zoom * 100)}%</span>
+          <button onClick={() => { setPan({ x: 0, y: 0 }); setZoom(1) }} style={{ background: '#1a1e28', border: '1px solid #222736', borderRadius: 4, padding: '4px 8px', fontSize: 11, color: '#94a3b8', cursor: 'pointer' }}>Fit View</button>
+          <button onClick={() => setZoom(z => Math.min(6, z * 1.2))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex' }}><ZoomIn size={13} /></button>
+          <button onClick={() => setZoom(z => Math.max(0.2, z / 1.2))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex' }}><ZoomOut size={13} /></button>
+          <button onClick={() => { setPan({ x: 0, y: 0 }); setZoom(1) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', display: 'flex' }}><Maximize2 size={13} /></button>
         </div>
       </div>
 
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+      <div
+        style={{ flex: 1, position: 'relative', overflow: 'hidden', cursor: 'grab' }}
+        onWheel={onWheel}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+      >
         {(!activeAP && apos.length === 0) ? (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <div style={{ fontSize: 11, color: '#2a3042' }}>No architecture data yet</div>
