@@ -3,7 +3,6 @@ import { useStore } from '../store'
 import MissionBrief from '../components/panels/MissionBrief'
 import ActivityFeed from '../components/panels/ActivityFeed'
 import SystemOverview from '../components/panels/SystemOverview'
-import AgentChat from '../components/panels/AgentChat'
 import OpenItems from '../components/panels/OpenItems'
 import KnowledgeGraph from '../components/panels/KnowledgeGraph'
 import QuickActions from '../components/panels/QuickActions'
@@ -12,7 +11,7 @@ import LayoutLock from '../components/layout/LayoutLock'
 import { usePageLayout } from '../hooks/usePageLayout'
 import type { EKEObject } from '../../shared/types'
 
-const PANELS = ['missionBrief', 'activityFeed', 'systemOverview', 'openItems', 'agentChat', 'knowledgeGraph', 'quickActions']
+const PANELS = ['missionBrief', 'activityFeed', 'systemOverview', 'openItems', 'knowledgeGraph', 'quickActions']
 
 export default function Home() {
   const { loadAppState, loadActivity, loadObjects } = useStore()
@@ -43,10 +42,10 @@ export default function Home() {
         {layout.sorted.filter(id => ['missionBrief','activityFeed','systemOverview','openItems'].includes(id)).map(id => (
           <LayoutPanel key={id} id={id} layout={layout}
             lockedStyle={id === 'missionBrief' ? { width: 260 } : id === 'systemOverview' ? { width: 200 } : id === 'openItems' ? { width: 180 } : { flex: 1 }}>
-            {id === 'missionBrief'  && <MissionBrief />}
-            {id === 'activityFeed'  && <ActivityFeed />}
-            {id === 'systemOverview'&& <SystemOverview />}
-            {id === 'openItems'     && <OpenItems />}
+            {id === 'missionBrief'   && <MissionBrief />}
+            {id === 'activityFeed'   && <ActivityFeed />}
+            {id === 'systemOverview' && <SystemOverview />}
+            {id === 'openItems'      && <OpenItems />}
           </LayoutPanel>
         ))}
       </div>
@@ -56,10 +55,9 @@ export default function Home() {
         ? { display: 'flex', flexWrap: 'wrap', gap: 10, flex: 1, minHeight: 0 }
         : { display: 'flex', gap: 10, flex: 1, minHeight: 0 }
       }>
-        {layout.sorted.filter(id => ['agentChat','knowledgeGraph','quickActions'].includes(id)).map(id => (
+        {layout.sorted.filter(id => ['knowledgeGraph','quickActions'].includes(id)).map(id => (
           <LayoutPanel key={id} id={id} layout={layout}
-            lockedStyle={id === 'agentChat' ? { flex: 1, minWidth: 0 } : id === 'knowledgeGraph' ? { width: 300, display: 'flex', flexDirection: 'column' } : { width: 180, flexShrink: 0 }}>
-            {id === 'agentChat' && <AgentChat />}
+            lockedStyle={id === 'knowledgeGraph' ? { flex: 1, display: 'flex', flexDirection: 'column' } : { width: 180, flexShrink: 0 }}>
             {id === 'knowledgeGraph' && (
               <div className="panel" style={{ width: '100%', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <div className="panel-header">
