@@ -1,0 +1,23 @@
+{
+  "id": "99119737-bda3-48c1-960d-e90aed6a1a75",
+  "type": "document",
+  "title": "COIM Specification",
+  "description": "Document the detailed architecture and phases of the COIM, focusing on how it captures expert cognition and transforms it into validated knowledge.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [],
+  "priority": null,
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:38:10.035Z",
+  "updated_at": "2026-06-28T13:38:10.035Z",
+  "body": null,
+  "engineering_id": null,
+  "obj_class": null,
+  "dis_category": null,
+  "dis_subsystem": null,
+  "dis_type": null,
+  "short_name": null,
+  "aliases": []
+}

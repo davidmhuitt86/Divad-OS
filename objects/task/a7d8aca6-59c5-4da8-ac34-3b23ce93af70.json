@@ -1,0 +1,27 @@
+{
+  "id": "a7d8aca6-59c5-4da8-ac34-3b23ce93af70",
+  "type": "task",
+  "title": "Schedule Formal Spec Drafting Session",
+  "description": "Block out team time to begin drafting COIM-0001, KIE-0001, and UOM-0001 based on today's AP-001 briefing.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "schedule",
+    "specification",
+    "task"
+  ],
+  "priority": "high",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:25:13.009Z",
+  "updated_at": "2026-06-28T13:25:13.009Z",
+  "body": null,
+  "engineering_id": null,
+  "obj_class": null,
+  "dis_category": null,
+  "dis_subsystem": null,
+  "dis_type": null,
+  "short_name": null,
+  "aliases": []
+}

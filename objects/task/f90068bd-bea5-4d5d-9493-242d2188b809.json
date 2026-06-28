@@ -1,0 +1,27 @@
+{
+  "id": "f90068bd-bea5-4d5d-9493-242d2188b809",
+  "type": "task",
+  "title": "Draft COIM-0001 Cognitive Object Ingestion Matrix Specification",
+  "description": "Draft the initial structure, core requirements, and validation steps for the Cognitive Object Ingestion Matrix. Include checklist and open research questions.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "COIM",
+    "draft",
+    "task"
+  ],
+  "priority": "high",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:25:12.974Z",
+  "updated_at": "2026-06-28T13:25:12.974Z",
+  "body": null,
+  "engineering_id": null,
+  "obj_class": null,
+  "dis_category": null,
+  "dis_subsystem": null,
+  "dis_type": null,
+  "short_name": null,
+  "aliases": []
+}

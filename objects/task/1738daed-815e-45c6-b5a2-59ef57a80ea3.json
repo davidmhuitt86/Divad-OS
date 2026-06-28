@@ -1,0 +1,27 @@
+{
+  "id": "1738daed-815e-45c6-b5a2-59ef57a80ea3",
+  "type": "task",
+  "title": "Create Spec Templates and Checklists",
+  "description": "Develop template structures and development/review checklists for all new foundational documents (COIM, KIE, UOM, Knowledge Ontology, etc.).",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "template",
+    "checklist",
+    "task"
+  ],
+  "priority": "high",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:25:13.018Z",
+  "updated_at": "2026-06-28T13:25:13.018Z",
+  "body": null,
+  "engineering_id": null,
+  "obj_class": null,
+  "dis_category": null,
+  "dis_subsystem": null,
+  "dis_type": null,
+  "short_name": null,
+  "aliases": []
+}

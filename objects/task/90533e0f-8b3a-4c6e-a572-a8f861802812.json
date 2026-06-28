@@ -1,0 +1,23 @@
+{
+  "id": "90533e0f-8b3a-4c6e-a572-a8f861802812",
+  "type": "task",
+  "title": "UOM-0001 — Universal Object Model Specification",
+  "description": null,
+  "status": "draft",
+  "owner": "agent",
+  "tags": [],
+  "priority": null,
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:36:31.204Z",
+  "updated_at": "2026-06-28T13:36:31.204Z",
+  "body": null,
+  "engineering_id": null,
+  "obj_class": null,
+  "dis_category": null,
+  "dis_subsystem": null,
+  "dis_type": null,
+  "short_name": null,
+  "aliases": []
+}

@@ -1,0 +1,27 @@
+{
+  "id": "1c89e8d3-93cd-4835-aa96-1f9f4d02a46b",
+  "type": "document",
+  "title": "AP-001 — Foundation Architecture Daily Brief",
+  "description": "Daily architectural brief for AP-001. Summarizes milestones, key philosophical shifts, and recommended priorities for Divad Technology Group dated June 28, 2026.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [
+    "AP-001",
+    "brief",
+    "daily"
+  ],
+  "priority": "high",
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:25:12.996Z",
+  "updated_at": "2026-06-28T13:25:12.996Z",
+  "body": null,
+  "engineering_id": null,
+  "obj_class": null,
+  "dis_category": null,
+  "dis_subsystem": null,
+  "dis_type": null,
+  "short_name": null,
+  "aliases": []
+}

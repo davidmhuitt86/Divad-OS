@@ -1,0 +1,23 @@
+{
+  "id": "c1e29359-f239-49fb-b4ff-4f428c04bb61",
+  "type": "architecture_phase",
+  "title": "AP-002 – Engineering Cognition Modeling",
+  "description": "Focused on formalizing how expert engineers observe, interpret, reason about, and validate technical information to teach the KIE not just what experts know, but how they arrive at that knowledge.",
+  "status": "draft",
+  "owner": "agent",
+  "tags": [],
+  "priority": null,
+  "metadata": {},
+  "revision": 1,
+  "parent_id": null,
+  "created_at": "2026-06-28T13:41:11.983Z",
+  "updated_at": "2026-06-28T13:41:11.983Z",
+  "body": null,
+  "engineering_id": null,
+  "obj_class": null,
+  "dis_category": null,
+  "dis_subsystem": null,
+  "dis_type": null,
+  "short_name": null,
+  "aliases": []
+}
