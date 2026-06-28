@@ -117,6 +117,22 @@ export async function getAllRelationships(): Promise<Relationship[]> {
   return all<Relationship>('SELECT * FROM relationships')
 }
 
+export async function listRelationships(objectId: string): Promise<Relationship[]> {
+  return all<Relationship>(
+    'SELECT * FROM relationships WHERE source_id = ? OR target_id = ? ORDER BY created_at DESC',
+    [objectId, objectId]
+  )
+}
+
+export async function deleteRelationship(id: string): Promise<void> {
+  await run('DELETE FROM relationships WHERE id = ?', [id])
+}
+
+export async function countAllRelationships(): Promise<number> {
+  const rows = await all<{ n: number }>('SELECT COUNT(*) as n FROM relationships')
+  return rows[0]?.n ?? 0
+}
+
 // ── Activity Log ──────────────────────────────────────────────────────────────
 
 export async function logActivity(

@@ -1,4 +1,4 @@
-import type { EKEObject, ActivityEvent, AgentMessage, AppState } from '../../shared/types'
+import type { EKEObject, ActivityEvent, AgentMessage, AppState, Relationship } from '../../shared/types'
 
 interface DivadOSApi {
   objects: {
@@ -19,7 +19,13 @@ interface DivadOSApi {
     state: () => Promise<AppState>
   }
   graph: {
-    snapshot: () => Promise<{ nodes: EKEObject[]; edges: unknown[] }>
+    snapshot: () => Promise<{ nodes: EKEObject[]; edges: Relationship[] }>
+  }
+  relationships: {
+    list:   (objectId: string) => Promise<Relationship[]>
+    count:  () => Promise<number>
+    create: (sourceId: string, targetId: string, type: string) => Promise<Relationship>
+    delete: (id: string) => Promise<void>
   }
   config: {
     get: (key: string) => Promise<string | null>

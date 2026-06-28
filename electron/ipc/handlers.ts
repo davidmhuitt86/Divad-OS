@@ -3,6 +3,7 @@ import {
   listObjects, getObject, createObject, updateObject,
   approveObject, listActivity, getAppState, getGraphSnapshot,
   getConfig, setConfig,
+  createRelationship, listRelationships, deleteRelationship, countAllRelationships,
 } from '../db/queries.js'
 import { sendToAgent, initOpenAI } from '../agent/openai.js'
 import { testConnection, performSync } from '../github/sync.js'
@@ -48,6 +49,19 @@ export function registerHandlers(win: BrowserWindow, apiKey: string, assistantId
   })
 
   ipcMain.handle('activity:list', async (_e, { limit } = {}) => listActivity(limit))
+
+  // Relationships
+  ipcMain.handle('relationships:list',   async (_e, { objectId }) => listRelationships(objectId))
+  ipcMain.handle('relationships:count',  async () => countAllRelationships())
+  ipcMain.handle('relationships:create', async (_e, { sourceId, targetId, type }) => {
+    const rel = await createRelationship(sourceId, targetId, type)
+    win.webContents.send('state:refresh')
+    return rel
+  })
+  ipcMain.handle('relationships:delete', async (_e, { id }) => {
+    await deleteRelationship(id)
+    win.webContents.send('state:refresh')
+  })
 
   ipcMain.handle('agent:send', async (_e, { message, context }) => {
     try {

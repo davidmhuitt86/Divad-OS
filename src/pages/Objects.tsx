@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react'
-import { Plus, ChevronDown, Search, Filter, MoreHorizontal, X, ArrowRight } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { Plus, ChevronDown, Search, MoreHorizontal, X, ArrowRight } from 'lucide-react'
 import { useStore } from '../store'
 import type { EKEObject, ObjectStatus, ObjectType } from '../../shared/types'
 
@@ -28,6 +28,13 @@ export default function Objects() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [page, setPage]             = useState(1)
   const [selected, setSelected]     = useState<EKEObject | null>(null)
+  const [relCount, setRelCount]     = useState<number | null>(null)
+
+  const isElectron = typeof window !== 'undefined' && !!window.divadOS
+  useEffect(() => {
+    if (!isElectron) return
+    window.divadOS.relationships.count().then(setRelCount)
+  }, [objects.length])
 
   const types   = useMemo(() => Array.from(new Set(objects.map(o => o.type))).sort(), [objects])
   const statuses = useMemo(() => Array.from(new Set(objects.map(o => o.status))).sort(), [objects])
@@ -123,7 +130,7 @@ export default function Objects() {
           <StatCard label="Total Objects"   value={objects.length} color="#a855f7" />
           <StatCard label="Active Objects"  value={objects.filter(o => o.status !== 'archived').length} color="#22c55e" sub={`${objects.length > 0 ? Math.round(objects.filter(o=>o.status!=='archived').length/objects.length*100) : 0}% of total`} />
           <StatCard label="Object Types"    value={types.length}   color="#3b82f6" sub="Unique types" />
-          <StatCard label="Relationships"   value="—"              color="#06b6d4" sub="Not tracked yet" />
+          <StatCard label="Relationships"   value={relCount ?? '—'} color="#06b6d4" sub={relCount !== null ? `${relCount} connection${relCount !== 1 ? 's' : ''}` : 'Loading…'} />
           <StatCard label="Avg. Confidence" value="—"              color="#f59e0b" sub="Not tracked yet" />
         </div>
 

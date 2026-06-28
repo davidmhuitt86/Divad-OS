@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { X, Edit2, CheckCircle, RotateCcw, Archive, Clock, Tag, User, Link2, Activity, ChevronDown, ChevronUp, Copy, ExternalLink } from 'lucide-react'
+import { X, Edit2, CheckCircle, RotateCcw, Archive, Clock, Tag, User, Link2, Activity, ChevronDown, ChevronUp, Copy, ExternalLink, Plus, Trash2, Search } from 'lucide-react'
 import { useStore } from '../../store'
-import type { EKEObject, ActivityEvent } from '../../../shared/types'
+import type { EKEObject, ActivityEvent, Relationship } from '../../../shared/types'
 import { TYPE_CONFIG } from '../wizard/CreationWizard'
 
 const STATUS_COLORS: Record<string, { bg: string; border: string; text: string }> = {
@@ -27,32 +27,50 @@ function relativeTime(iso: string): string {
   return `${Math.floor(h / 24)}d ago`
 }
 
+const REL_TYPES = [
+  { value: 'related_to',  label: 'Related To' },
+  { value: 'depends_on',  label: 'Depends On' },
+  { value: 'implements',  label: 'Implements' },
+  { value: 'references',  label: 'References' },
+  { value: 'blocks',      label: 'Blocks' },
+  { value: 'child_of',    label: 'Child Of' },
+  { value: 'supersedes',  label: 'Supersedes' },
+]
+
 export default function ObjectViewer() {
   const { viewingObject, closeObject, objects, openObject, setActivePage, openWizardEdit } = useStore()
   const [activity, setActivity] = useState<ActivityEvent[]>([])
+  const [relationships, setRelationships] = useState<Relationship[]>([])
   const [showMeta, setShowMeta] = useState(true)
   const [showActivity, setShowActivity] = useState(true)
-  const [showLinks, setShowLinks] = useState(true)
+  const [showRels, setShowRels] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [addingRel, setAddingRel] = useState(false)
+  const [relSearch, setRelSearch] = useState('')
+  const [relType, setRelType] = useState('related_to')
+  const [relTarget, setRelTarget] = useState<EKEObject | null>(null)
+  const [relSaving, setRelSaving] = useState(false)
 
   const obj = viewingObject
+  const isElectron = typeof window !== 'undefined' && !!window.divadOS
+
+  const loadRelationships = () => {
+    if (!obj || !isElectron) return
+    window.divadOS.relationships.list(obj.id).then(setRelationships)
+  }
 
   useEffect(() => {
-    if (!obj || typeof window === 'undefined' || !window.divadOS) return
+    if (!obj || !isElectron) return
     window.divadOS.activity.list(100).then((all: ActivityEvent[]) => {
       setActivity(all.filter(e => e.object_id === obj.id))
     })
+    loadRelationships()
   }, [obj?.id])
 
   if (!obj) return null
 
   const cfg = TYPE_CONFIG[obj.type] ?? { icon: '📄', label: obj.type, color: '#3b82f6' }
   const statusStyle = STATUS_COLORS[obj.status] ?? STATUS_COLORS.draft
-  const linkedObjs = objects.filter(o => {
-    const m = obj.metadata as Record<string, unknown>
-    const linkedIds = m.linkedObjectIds as string[] | undefined
-    return linkedIds?.includes(o.id)
-  })
 
   const copyId = () => {
     navigator.clipboard?.writeText(obj.id)
@@ -66,6 +84,28 @@ export default function ObjectViewer() {
     const updated = await window.divadOS.objects.get(obj.id)
     if (updated) openObject(updated)
   }
+
+  const handleAddRelationship = async () => {
+    if (!relTarget || !isElectron) return
+    setRelSaving(true)
+    await window.divadOS.relationships.create(obj.id, relTarget.id, relType)
+    setRelSaving(false)
+    setAddingRel(false)
+    setRelSearch('')
+    setRelTarget(null)
+    setRelType('related_to')
+    loadRelationships()
+  }
+
+  const handleDeleteRelationship = async (id: string) => {
+    if (!isElectron) return
+    await window.divadOS.relationships.delete(id)
+    loadRelationships()
+  }
+
+  const relSearchResults = relSearch.length > 0
+    ? objects.filter(o => o.id !== obj.id && o.title.toLowerCase().includes(relSearch.toLowerCase())).slice(0, 6)
+    : []
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 800, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 48 }}>
@@ -133,26 +173,116 @@ export default function ObjectViewer() {
               </Section>
             )}
 
-            {/* Linked objects */}
-            <Collapsible title={`Linked Objects (${linkedObjs.length})`} open={showLinks} toggle={() => setShowLinks(p => !p)}>
-              {linkedObjs.length === 0
-                ? <div style={{ fontSize: 11, color: '#2a3042', fontStyle: 'italic' }}>No linked objects</div>
-                : <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {linkedObjs.map(lo => {
-                      const lc = TYPE_CONFIG[lo.type] ?? { icon: '📄', color: '#3b82f6', label: lo.type }
-                      return (
-                        <button key={lo.id} onClick={() => openObject(lo)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#0d0f14', border: '1px solid #1a1e28', borderRadius: 7, cursor: 'pointer', textAlign: 'left', width: '100%' }}>
-                          <span style={{ fontSize: 16 }}>{lc.icon}</span>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 11, color: '#e2e8f0', fontWeight: 600 }}>{lo.title}</div>
-                            <div style={{ fontSize: 9, color: '#475569' }}>{lc.label} · {lo.status}</div>
-                          </div>
-                          <ExternalLink size={11} color="#2a3042" />
-                        </button>
-                      )
-                    })}
-                  </div>
+            {/* Relationships */}
+            <Collapsible
+              title={`Relationships (${relationships.length})`}
+              open={showRels}
+              toggle={() => setShowRels(p => !p)}
+              action={
+                <button onClick={e => { e.stopPropagation(); setAddingRel(p => !p) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: addingRel ? 'rgba(59,130,246,0.1)' : 'none', border: `1px solid ${addingRel ? 'rgba(59,130,246,0.3)' : '#222736'}`, borderRadius: 5, cursor: 'pointer', fontSize: 10, color: addingRel ? '#3b82f6' : '#475569' }}>
+                  <Plus size={10} /> Add
+                </button>
               }
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {/* Add relationship form */}
+                {addingRel && (
+                  <div style={{ padding: '10px 12px', background: '#0d0f14', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {/* Type selector */}
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {REL_TYPES.map(rt => (
+                        <button key={rt.value} onClick={() => setRelType(rt.value)}
+                          style={{ padding: '3px 9px', borderRadius: 10, border: `1px solid ${relType === rt.value ? '#3b82f6' : '#222736'}`, background: relType === rt.value ? 'rgba(59,130,246,0.12)' : 'transparent', color: relType === rt.value ? '#3b82f6' : '#475569', fontSize: 9, cursor: 'pointer', fontWeight: relType === rt.value ? 600 : 400 }}>
+                          {rt.label}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Object search */}
+                    <div style={{ position: 'relative' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 9px', background: '#13161e', border: '1px solid #222736', borderRadius: 6 }}>
+                        <Search size={11} color="#475569" />
+                        <input
+                          value={relTarget ? relTarget.title : relSearch}
+                          onChange={e => { setRelSearch(e.target.value); setRelTarget(null) }}
+                          placeholder="Search object to link…"
+                          style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 11, color: '#e2e8f0', fontFamily: 'inherit' }}
+                        />
+                        {relTarget && <span style={{ fontSize: 10, color: '#22c55e' }}>✓</span>}
+                      </div>
+                      {relSearchResults.length > 0 && !relTarget && (
+                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1a1e28', border: '1px solid #222736', borderRadius: 6, zIndex: 10, marginTop: 2, maxHeight: 160, overflowY: 'auto' }}>
+                          {relSearchResults.map(o => {
+                            const oc = TYPE_CONFIG[o.type] ?? { icon: '📄', label: o.type, color: '#3b82f6' }
+                            return (
+                              <div key={o.id} onMouseDown={e => { e.preventDefault(); setRelTarget(o); setRelSearch('') }}
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', cursor: 'pointer' }}
+                                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#13161e'}
+                                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                                <span style={{ fontSize: 13 }}>{oc.icon}</span>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: 11, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.title}</div>
+                                  <div style={{ fontSize: 9, color: '#475569' }}>{oc.label}</div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={handleAddRelationship} disabled={!relTarget || relSaving}
+                        style={{ flex: 1, padding: '6px', background: relTarget ? '#3b82f6' : '#1a1e28', border: 'none', borderRadius: 5, cursor: relTarget ? 'pointer' : 'not-allowed', fontSize: 11, color: relTarget ? '#fff' : '#475569', fontWeight: 600 }}>
+                        {relSaving ? 'Adding…' : 'Add Relationship'}
+                      </button>
+                      <button onClick={() => { setAddingRel(false); setRelSearch(''); setRelTarget(null) }}
+                        style={{ padding: '6px 10px', background: 'none', border: '1px solid #222736', borderRadius: 5, cursor: 'pointer', fontSize: 11, color: '#475569' }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Existing relationships */}
+                {relationships.length === 0 && !addingRel
+                  ? <div style={{ fontSize: 11, color: '#2a3042', fontStyle: 'italic' }}>No relationships — click Add to connect objects</div>
+                  : relationships.map(rel => {
+                      const otherId = rel.source_id === obj.id ? rel.target_id : rel.source_id
+                      const isOutgoing = rel.source_id === obj.id
+                      const other = objects.find(o => o.id === otherId)
+                      const oc = other ? (TYPE_CONFIG[other.type] ?? { icon: '📄', color: '#3b82f6', label: other.type }) : null
+                      const relLabel = REL_TYPES.find(r => r.value === rel.relationship_type)?.label ?? rel.relationship_type
+                      return (
+                        <div key={rel.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: '#0d0f14', border: '1px solid #1a1e28', borderRadius: 7 }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                            <span style={{ fontSize: 8, color: '#475569', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{isOutgoing ? 'out' : 'in'}</span>
+                            <Link2 size={11} color="#3b82f6" />
+                          </div>
+                          <span style={{ fontSize: 9, color: '#3b82f6', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 4, padding: '2px 6px', flexShrink: 0 }}>{relLabel}</span>
+                          {other ? (
+                            <button onClick={() => openObject(other)} style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0 }}>
+                              <span style={{ fontSize: 13 }}>{oc?.icon}</span>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 11, color: '#e2e8f0', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{other.title}</div>
+                                <div style={{ fontSize: 9, color: '#475569' }}>{oc?.label} · {other.status}</div>
+                              </div>
+                              <ExternalLink size={10} color="#2a3042" />
+                            </button>
+                          ) : (
+                            <div style={{ flex: 1, fontSize: 10, color: '#2a3042', fontStyle: 'italic', fontFamily: 'monospace' }}>{otherId.slice(0, 12)}…</div>
+                          )}
+                          <button onClick={() => handleDeleteRelationship(rel.id)}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: 2, flexShrink: 0, display: 'flex' }}
+                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#ef4444'}
+                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#475569'}>
+                            <Trash2 size={11} />
+                          </button>
+                        </div>
+                      )
+                    })
+                }
+              </div>
             </Collapsible>
 
             {/* Activity */}
@@ -402,14 +532,17 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function Collapsible({ title, open, toggle, children }: { title: string; open: boolean; toggle: () => void; children: React.ReactNode }) {
+function Collapsible({ title, open, toggle, children, action }: { title: string; open: boolean; toggle: () => void; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div>
-      <button onClick={toggle} style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', background: 'none', border: 'none', cursor: 'pointer', marginBottom: open ? 10 : 0 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{title}</div>
-        <div style={{ flex: 1, height: 1, background: '#1a1e28' }} />
-        {open ? <ChevronUp size={11} color="#475569" /> : <ChevronDown size={11} color="#475569" />}
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: open ? 10 : 0 }}>
+        <button onClick={toggle} style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, background: 'none', border: 'none', cursor: 'pointer' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{title}</div>
+          <div style={{ flex: 1, height: 1, background: '#1a1e28' }} />
+          {open ? <ChevronUp size={11} color="#475569" /> : <ChevronDown size={11} color="#475569" />}
+        </button>
+        {action}
+      </div>
       {open && children}
     </div>
   )
