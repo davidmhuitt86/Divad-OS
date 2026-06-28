@@ -7,13 +7,19 @@ import KnowledgeGraph        from '../components/knowledge/KnowledgeGraph'
 import KnowledgeValidation   from '../components/knowledge/KnowledgeValidation'
 import KnowledgeCenterPanels from '../components/knowledge/KnowledgeCenterPanels'
 import KnowledgeRightPanel   from '../components/knowledge/KnowledgeRightPanel'
+import LayoutPanel from '../components/layout/LayoutPanel'
+import LayoutLock  from '../components/layout/LayoutLock'
+import { usePageLayout } from '../hooks/usePageLayout'
+
+const PANELS = ['statCards', 'domains', 'graph', 'validation', 'centerPanels', 'rightPanel']
 
 export default function Knowledge() {
   const { objects: allObjs, loadObjects, navigateToObjects } = useStore()
+  const layout = usePageLayout('knowledge', PANELS)
   useEffect(() => { loadObjects() }, [])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', padding: 14, gap: 10 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', padding: 14, gap: 10, position: 'relative' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <div>
@@ -26,25 +32,35 @@ export default function Knowledge() {
       </div>
 
       {/* Stat cards */}
-      <KnowledgeStatCards objects={allObjs} />
+      <LayoutPanel id="statCards" layout={layout}>
+        <KnowledgeStatCards objects={allObjs} />
+      </LayoutPanel>
 
       {/* Main body */}
-      <div style={{ display: 'flex', gap: 10, flex: 1, minHeight: 0 }}>
-        {/* Left: Domains + Insights */}
-        <KnowledgeDomains objects={allObjs} />
+      <div style={layout.unlocked ? { display: 'flex', flexWrap: 'wrap', gap: 10, flex: 1, minHeight: 0 } : { display: 'flex', gap: 10, flex: 1, minHeight: 0 }}>
+        <LayoutPanel id="domains" layout={layout} lockedStyle={{ flexShrink: 0 }}>
+          <KnowledgeDomains objects={allObjs} />
+        </LayoutPanel>
 
-        {/* Center: graph + validation stacked */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minWidth: 0 }}>
-          <KnowledgeGraph />
-          <KnowledgeValidation />
+          <LayoutPanel id="graph" layout={layout} lockedStyle={{ flex: 1 }}>
+            <KnowledgeGraph />
+          </LayoutPanel>
+          <LayoutPanel id="validation" layout={layout} lockedStyle={{ flexShrink: 0 }}>
+            <KnowledgeValidation />
+          </LayoutPanel>
         </div>
 
-        {/* Center-right: Recent objects + Featured */}
-        <KnowledgeCenterPanels objects={allObjs} />
+        <LayoutPanel id="centerPanels" layout={layout} lockedStyle={{ flexShrink: 0 }}>
+          <KnowledgeCenterPanels objects={allObjs} />
+        </LayoutPanel>
 
-        {/* Right: Health + Quick Search + Activity */}
-        <KnowledgeRightPanel objects={allObjs} />
+        <LayoutPanel id="rightPanel" layout={layout} lockedStyle={{ flexShrink: 0 }}>
+          <KnowledgeRightPanel objects={allObjs} />
+        </LayoutPanel>
       </div>
+
+      <LayoutLock layout={layout} />
     </div>
   )
 }

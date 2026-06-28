@@ -1,6 +1,11 @@
 import { useState, useMemo } from 'react'
 import { Plus, ChevronDown, Eye, Share2, Download, MoreHorizontal, ArrowRight, Circle } from 'lucide-react'
 import { useStore } from '../store'
+import LayoutPanel from '../components/layout/LayoutPanel'
+import LayoutLock  from '../components/layout/LayoutLock'
+import { usePageLayout } from '../hooks/usePageLayout'
+
+const PANELS = ['statCards', 'chartsRow', 'recentTable']
 
 const TABS = ['Overview', 'My Reports', 'Shared with Me', 'Scheduled', 'Templates', 'Data Sources']
 
@@ -25,9 +30,10 @@ function relativeTime(iso: string): string {
 }
 
 export default function Reports() {
-  const { objects, activity, openWizard } = useStore()
+  const { objects, activity, openWizard, setActivePage, navigateToObjects } = useStore()
   const [tab, setTab] = useState('Overview')
   const [category, setCategory] = useState('all')
+  const layout = usePageLayout('reports', PANELS)
 
   const recentActivity = useMemo(() =>
     [...activity].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 6),
@@ -38,7 +44,7 @@ export default function Reports() {
   const totalObjects = objects.length
 
   return (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#0d0f14' }}>
+    <div style={{ display: 'flex', height: '100%', overflow: 'hidden', background: '#0d0f14', position: 'relative' }}>
       {/* Left sidebar */}
       <div style={{ width: 196, borderRight: '1px solid #1a1e28', display: 'flex', flexDirection: 'column', padding: '14px 0', flexShrink: 0, overflowY: 'auto' }}>
         <SideSection label="Quick Create">

@@ -8,41 +8,33 @@ import ArchGraph      from '../components/architecture/ArchGraph'
 import ArchRightPanel from '../components/architecture/ArchRightPanel'
 import ArchRoadmap    from '../components/architecture/ArchRoadmap'
 import DependencyMap  from '../components/architecture/DependencyMap'
+import LayoutPanel from '../components/layout/LayoutPanel'
+import LayoutLock  from '../components/layout/LayoutLock'
+import { usePageLayout } from '../hooks/usePageLayout'
+
+const PANELS = ['statCards', 'phasesList', 'mainView', 'rightPanel', 'roadmap', 'depMap']
 
 export default function Architecture() {
   const { objects, activity, appState, loadObjects, loadAppState, loadActivity, openWizard, navigateToObjects } = useStore()
   const [selectedAP, setSelectedAP] = useState<EKEObject | null>(null)
   const [view, setView] = useState<'graph' | 'roadmap'>('graph')
+  const layout = usePageLayout('architecture', PANELS)
 
-  useEffect(() => {
-    loadObjects()
-    loadAppState()
-    loadActivity()
-  }, [])
+  useEffect(() => { loadObjects(); loadAppState(); loadActivity() }, [])
 
   const phases = useMemo(() => objects.filter(o => o.type === 'architecture_phase'), [objects])
   const apos   = useMemo(() => objects.filter(o => o.type === 'apo'), [objects])
   const apts   = useMemo(() => objects.filter(o => o.type === 'apt' || o.type === 'task'), [objects])
 
-  // Auto-select current AP or first phase — only when phases actually change
   useEffect(() => {
-    if (!selectedAP && phases.length > 0) {
-      setSelectedAP(appState?.currentAP ?? phases[0])
-    }
+    if (!selectedAP && phases.length > 0) setSelectedAP(appState?.currentAP ?? phases[0])
   }, [phases.length, appState?.currentAP?.id])
 
-  const visibleApos = useMemo(() =>
-    selectedAP ? apos.filter(o => o.parent_id === selectedAP.id) : apos
-  , [selectedAP, apos])
-
-  const visibleApts = useMemo(() =>
-    visibleApos.length > 0
-      ? apts.filter(o => visibleApos.some(apo => apo.id === o.parent_id))
-      : apts
-  , [visibleApos, apts])
+  const visibleApos = useMemo(() => selectedAP ? apos.filter(o => o.parent_id === selectedAP.id) : apos, [selectedAP, apos])
+  const visibleApts = useMemo(() => visibleApos.length > 0 ? apts.filter(o => visibleApos.some(apo => apo.id === o.parent_id)) : apts, [visibleApos, apts])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', padding: 14, gap: 10 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', padding: 14, gap: 10, position: 'relative' }}>
       {/* Page Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <div>
@@ -63,27 +55,41 @@ export default function Architecture() {
       </div>
 
       {/* Stat Cards */}
-      <ArchStatCards objects={objects} appState={appState} />
+      <LayoutPanel id="statCards" layout={layout}>
+        <ArchStatCards objects={objects} appState={appState} />
+      </LayoutPanel>
 
       {/* Main 3-column */}
-      <div style={{ display: 'flex', gap: 10, flex: 1, minHeight: 0 }}>
-        <PhasesList phases={phases} activeId={selectedAP?.id ?? null} onSelect={setSelectedAP} onNewAP={() => openWizard('architecture_phase')} onViewAll={() => navigateToObjects('architecture_phase')} />
-        {view === 'graph' ? (
-          <ArchGraph activeAP={selectedAP} apos={visibleApos} apts={visibleApts} />
-        ) : (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
-            <ArchRoadmap phases={phases} />
-            <DependencyMap objects={objects} />
-          </div>
-        )}
-        <ArchRightPanel objects={objects} activity={activity} />
+      <div style={layout.unlocked ? { display: 'flex', flexWrap: 'wrap', gap: 10, flex: 1, minHeight: 0 } : { display: 'flex', gap: 10, flex: 1, minHeight: 0 }}>
+        <LayoutPanel id="phasesList" layout={layout} lockedStyle={{ flexShrink: 0 }}>
+          <PhasesList phases={phases} activeId={selectedAP?.id ?? null} onSelect={setSelectedAP} onNewAP={() => openWizard('architecture_phase')} onViewAll={() => navigateToObjects('architecture_phase')} />
+        </LayoutPanel>
+        <LayoutPanel id="mainView" layout={layout} lockedStyle={{ flex: 1, minWidth: 0 }}>
+          {view === 'graph' ? (
+            <ArchGraph activeAP={selectedAP} apos={visibleApos} apts={visibleApts} />
+          ) : (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0, height: '100%' }}>
+              <ArchRoadmap phases={phases} />
+              <DependencyMap objects={objects} />
+            </div>
+          )}
+        </LayoutPanel>
+        <LayoutPanel id="rightPanel" layout={layout} lockedStyle={{ flexShrink: 0 }}>
+          <ArchRightPanel objects={objects} activity={activity} />
+        </LayoutPanel>
       </div>
 
       {/* Bottom row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, flexShrink: 0 }}>
-        <ArchRoadmap phases={phases} />
-        <DependencyMap objects={objects} />
+      <div style={layout.unlocked ? { display: 'flex', flexWrap: 'wrap', gap: 10, flexShrink: 0 } : { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, flexShrink: 0 }}>
+        <LayoutPanel id="roadmap" layout={layout} lockedStyle={{ flex: 1 }}>
+          <ArchRoadmap phases={phases} />
+        </LayoutPanel>
+        <LayoutPanel id="depMap" layout={layout} lockedStyle={{ flex: 1 }}>
+          <DependencyMap objects={objects} />
+        </LayoutPanel>
       </div>
+
+      <LayoutLock layout={layout} />
     </div>
   )
 }
