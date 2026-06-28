@@ -68,17 +68,6 @@ export default function Sidebar() {
 
   return (
     <aside style={{ width: 208, display: 'flex', flexDirection: 'column', background: '#13161e', borderRight: '1px solid #1a1e28', flexShrink: 0, overflow: 'hidden' }}>
-      {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderBottom: '1px solid #1a1e28', flexShrink: 0 }}>
-        <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ color: '#3b82f6', fontWeight: 700, fontSize: 11 }}>▲</span>
-        </div>
-        <div>
-          <div style={{ color: '#e2e8f0', fontWeight: 700, fontSize: 12, lineHeight: 1 }}>DIVAD OS</div>
-          <div style={{ color: '#475569', fontSize: 9, marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Engineering OS</div>
-        </div>
-      </div>
-
       {/* Main nav */}
       <nav style={{ overflowY: 'auto', flex: 1 }}>
         <div style={{ padding: '6px 0 2px' }}>

@@ -140,7 +140,7 @@ export function registerHandlers(win: BrowserWindow, apiKey: string, assistantId
     const { Document, Packer, Paragraph, TextRun, HeadingLevel, BorderStyle, Table, TableRow, TableCell, WidthType, AlignmentType, Header, Footer, PageNumber, NumberFormat } = await import('docx')
 
     const meta = objectData.metadata as Record<string, string>
-    const contentParas: Paragraph[] = []
+    const contentParas: InstanceType<typeof Paragraph>[] = []
 
     if (objectData.description) {
       contentParas.push(new Paragraph({ text: 'Description', heading: HeadingLevel.HEADING_2, spacing: { before: 240, after: 120 } }))
@@ -172,7 +172,7 @@ export function registerHandlers(win: BrowserWindow, apiKey: string, assistantId
       ] })),
     })
 
-    const sigParas: Paragraph[] = []
+    const sigParas: InstanceType<typeof Paragraph>[] = []
     if (signatureData?.include) {
       sigParas.push(
         new Paragraph({ text: '', spacing: { before: 480 } }),

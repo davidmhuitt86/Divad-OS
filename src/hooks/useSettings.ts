@@ -50,6 +50,14 @@ export interface AppSettings {
   defaultObjectView:     'list' | 'grid'
   defaultRepoView:       'list' | 'grid'
   defaultKnowledgeView:  'list' | 'grid'
+
+  // Boot
+  bootMode: 'animation_prompt' | 'animation_auto' | 'auto' | 'login'
+
+  // Header
+  headerShowGreeting:    boolean
+  headerShowQuote:       boolean
+  headerShowAIAssistant: boolean
 }
 
 const DEFAULTS: AppSettings = {
@@ -83,6 +91,10 @@ const DEFAULTS: AppSettings = {
   defaultObjectView:  'list',
   defaultRepoView:    'list',
   defaultKnowledgeView: 'list',
+  bootMode:           'animation_prompt',
+  headerShowGreeting:    true,
+  headerShowQuote:       true,
+  headerShowAIAssistant: true,
 }
 
 const KEY = 'divad-os-settings'

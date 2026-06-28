@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react'
-import { Save, RotateCcw, Shield, Database, Cpu, Globe, Ruler, Bell, Layout, Bot, HardDrive, Info, Puzzle, User, Palette, CheckCircle, Github, Loader2, Link2, Trash2, Plus } from 'lucide-react'
+import { Save, RotateCcw, Shield, Database, Cpu, Globe, Ruler, Bell, Layout, Bot, HardDrive, Info, Puzzle, User, Palette, CheckCircle, Github, Loader2, Link2, Trash2, Plus, Power } from 'lucide-react'
 import { useSettings } from '../hooks/useSettings'
 import { useStore, isSyncCurrent } from '../store'
+
+const BOOT_OPTIONS = [
+  { value: 'animation_prompt', label: 'Boot Animation + Enter Prompt',    desc: 'Play the full Divad OS boot animation, then show an ENTER button you must click to proceed.' },
+  { value: 'animation_auto',   label: 'Boot Animation + Auto Enter',      desc: 'Play the boot animation and automatically enter the app when the animation finishes.' },
+  { value: 'auto',             label: 'Skip Animation — Enter Directly',  desc: 'Launch straight into the app with no animation or delay.' },
+  { value: 'login',            label: 'Require Internal Account Login',    desc: 'Force a username and password login every time the app starts before granting access.' },
+] as const
+const BOOT_LABELS: Record<string, string> = Object.fromEntries(BOOT_OPTIONS.map(o => [o.value, o.label.split('—')[0].trim()]))
 
 const SECTION_ICONS: Record<string, React.ReactNode> = {
   profile:     <User size={18} color="#3b82f6" />,
@@ -12,6 +20,7 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
   units:       <Ruler size={18} color="#f97316" />,
   datasync:    <Database size={18} color="#22c55e" />,
   security:    <Shield size={18} color="#ef4444" />,
+  boot:        <Power size={18} color="#3b82f6" />,
   integrations:<Puzzle size={18} color="#a855f7" />,
   workspace:   <Layout size={18} color="#3b82f6" />,
   ai:          <Bot size={18} color="#06b6d4" />,
@@ -129,6 +138,54 @@ export default function Settings() {
                 <Toggle checked={settings.animations} onChange={v => update({ animations: v })} label={settings.animations ? 'Enabled' : 'Disabled'} />
               </Field>
             </Grid>
+
+            <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid #1a1e28' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>Global Header</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#e2e8f0' }}>Show Greeting</div>
+                    <div style={{ fontSize: 10, color: '#475569', marginTop: 2 }}>Display "Good Morning / Afternoon / Evening, David" in the header</div>
+                  </div>
+                  <Toggle checked={settings.headerShowGreeting} onChange={v => update({ headerShowGreeting: v })} label={settings.headerShowGreeting ? 'On' : 'Off'} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#e2e8f0' }}>Show Motivational Quote</div>
+                    <div style={{ fontSize: 10, color: '#475569', marginTop: 2 }}>Show the company motto beneath the logo</div>
+                  </div>
+                  <Toggle checked={settings.headerShowQuote} onChange={v => update({ headerShowQuote: v })} label={settings.headerShowQuote ? 'On' : 'Off'} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: 12, color: '#e2e8f0' }}>Show AI Assistant Button</div>
+                    <div style={{ fontSize: 10, color: '#475569', marginTop: 2 }}>Quick-access AI Assistant button in the header bar</div>
+                  </div>
+                  <Toggle checked={settings.headerShowAIAssistant} onChange={v => update({ headerShowAIAssistant: v })} label={settings.headerShowAIAssistant ? 'On' : 'Off'} />
+                </div>
+              </div>
+            </div>
+          </SettingRow>
+
+          {/* Boot Mode */}
+          <SettingRow
+            id="boot" icon={SECTION_ICONS.boot} title="Boot &amp; Startup"
+            desc="Control what happens when Divad OS launches."
+            expanded={expanded === 'boot'} onToggle={() => toggle('boot')}
+            action={<span style={{ fontSize: 10, color: '#94a3b8', padding: '4px 10px', background: '#1a1e28', borderRadius: 5 }}>{BOOT_LABELS[settings.bootMode] ?? 'Animation + Enter'}</span>}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
+              {BOOT_OPTIONS.map(opt => (
+                <button key={opt.value} onClick={() => update({ bootMode: opt.value as any })}
+                  style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', background: settings.bootMode === opt.value ? 'rgba(59,130,246,0.08)' : '#0d0f14', border: `1px solid ${settings.bootMode === opt.value ? 'rgba(59,130,246,0.4)' : '#1a1e28'}`, borderRadius: 8, cursor: 'pointer', textAlign: 'left' }}>
+                  <div style={{ width: 14, height: 14, borderRadius: '50%', border: `2px solid ${settings.bootMode === opt.value ? '#3b82f6' : '#2a3042'}`, background: settings.bootMode === opt.value ? '#3b82f6' : 'transparent', flexShrink: 0, marginTop: 2 }} />
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: settings.bootMode === opt.value ? '#e2e8f0' : '#94a3b8', marginBottom: 3 }}>{opt.label}</div>
+                    <div style={{ fontSize: 10, color: '#475569', lineHeight: 1.5 }}>{opt.desc}</div>
+                  </div>
+                </button>
+              ))}
+              <div style={{ fontSize: 10, color: '#2a3042', paddingTop: 4 }}>Changes take effect on next launch.</div>
+            </div>
           </SettingRow>
 
           {/* 3 — Dashboard */}
@@ -419,7 +476,7 @@ export default function Settings() {
               { icon: '↺',  title: 'Reset Preferences', desc: 'Reset all settings to default without deleting your data.', action: () => { if (confirm('Reset all settings to defaults?')) reset() } },
               { icon: '💬', title: 'Feedback & Support', desc: 'Send feedback, report issues, or request new features.', action: () => toggle('about') },
             ].map(c => (
-              <div key={c.title} onClick={c.action} style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, padding: '12px 14px', cursor: c.action ? 'pointer' : 'default' }}
+              <div key={c.title} onClick={c.action} style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, padding: '12px 14px', cursor: 'pointer' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = '#3b82f644'}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = '#1a1e28'}>
                 <div style={{ fontSize: 20, marginBottom: 8 }}>{c.icon}</div>
