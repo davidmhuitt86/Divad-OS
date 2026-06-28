@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { X, Edit2, CheckCircle, RotateCcw, Archive, Clock, Tag, User, Link2, Activity, ChevronDown, ChevronUp, Copy, ExternalLink, Plus, Trash2, Search, Download } from 'lucide-react'
+import { X, Edit2, CheckCircle, RotateCcw, Archive, Clock, Tag, User, Link2, Activity, ChevronDown, ChevronUp, Copy, ExternalLink, Plus, Trash2, Search, Download, FileText, Image, Music, Video, Lock, Paperclip } from 'lucide-react'
 import { useStore } from '../../store'
-import type { EKEObject, ActivityEvent, Relationship } from '../../../shared/types'
+import type { EKEObject, ActivityEvent, Relationship, Attachment } from '../../../shared/types'
+import { DIS_CATEGORIES, DIS_SUBSYSTEMS, DIS_TYPES } from '../../../shared/types/constants'
 import { TYPE_CONFIG } from '../wizard/CreationWizard'
 import ExportModal from './ExportModal'
 
@@ -45,6 +46,8 @@ export default function ObjectViewer() {
   const [showMeta, setShowMeta] = useState(true)
   const [showActivity, setShowActivity] = useState(true)
   const [showRels, setShowRels] = useState(true)
+  const [showMissionCard, setShowMissionCard] = useState(true)
+  const [showBody, setShowBody] = useState(true)
   const [copied, setCopied] = useState(false)
   const [addingRel, setAddingRel] = useState(false)
   const [relSearch, setRelSearch] = useState('')
@@ -163,10 +166,76 @@ export default function ObjectViewer() {
           {/* Main content */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
+            {/* Mission Card — DIS-0001 identity block */}
+            {(obj.engineering_id || obj.dis_category || obj.obj_class) && (
+              <Collapsible title="Mission Card" open={showMissionCard} toggle={() => setShowMissionCard(p => !p)}>
+                <div style={{ fontFamily: 'monospace', fontSize: 11, display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  <MissionRow label="PERMANENT ID" value={obj.id} mono highlight />
+                  {obj.engineering_id && <MissionRow label="ENGINEERING ID" value={obj.engineering_id} mono highlight />}
+                  {obj.short_name && <MissionRow label="CALL SIGN" value={obj.short_name} />}
+                  {obj.aliases?.length > 0 && <MissionRow label="ALIASES" value={obj.aliases.join(' · ')} />}
+                  {obj.obj_class && <MissionRow label="CLASS" value={obj.obj_class} />}
+                  {obj.dis_category && <MissionRow label="CATEGORY" value={`${obj.dis_category} — ${DIS_CATEGORIES[obj.dis_category] ?? obj.dis_category}`} />}
+                  {obj.dis_subsystem && <MissionRow label="SUBSYSTEM" value={`${obj.dis_subsystem} — ${DIS_SUBSYSTEMS[obj.dis_subsystem] ?? obj.dis_subsystem}`} />}
+                  {obj.dis_type && <MissionRow label="TYPE CODE" value={`${obj.dis_type} — ${DIS_TYPES[obj.dis_type] ?? obj.dis_type}`} />}
+                  <MissionRow label="STATUS" value={obj.status.replace('_', ' ').toUpperCase()} />
+                  <MissionRow label="REVISION" value={`R${String(obj.revision).padStart(2, '0')}`} />
+                  <MissionRow label="OWNER" value={obj.owner ?? '—'} />
+                  <MissionRow label="CREATED" value={new Date(obj.created_at).toLocaleDateString()} />
+                  <MissionRow label="UPDATED" value={new Date(obj.updated_at).toLocaleDateString()} />
+                </div>
+              </Collapsible>
+            )}
+
             {/* Description */}
             {obj.description && (
-              <Section title="Description">
+              <Section title="Context">
                 <p style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap' }}>{obj.description}</p>
+              </Section>
+            )}
+
+            {/* Body — main markdown content */}
+            {obj.body && (
+              <Collapsible
+                title={
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                    Main Body
+                    {(obj.status === 'approved' || obj.status === 'published') && (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#22c55e11', border: '1px solid #22c55e33', borderRadius: 10, fontSize: 9, color: '#4ade80', fontWeight: 600 }}>
+                        <Lock size={9} /> Approved — locked
+                      </span>
+                    )}
+                  </span>
+                }
+                open={showBody}
+                toggle={() => setShowBody(p => !p)}
+              >
+                <pre style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.8, margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace', background: '#0d0f14', border: '1px solid #1a1e28', borderRadius: 6, padding: '12px 14px', overflowX: 'auto' }}>
+                  {obj.body}
+                </pre>
+              </Collapsible>
+            )}
+
+            {/* Attachments */}
+            {((obj.metadata as Record<string, unknown>)?.attachments as Attachment[])?.length > 0 && (
+              <Section title={`Attachments (${((obj.metadata as Record<string, unknown>).attachments as Attachment[]).length})`}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {((obj.metadata as Record<string, unknown>).attachments as Attachment[]).map(a => (
+                    <div key={a.path} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', background: '#0d0f14', border: '1px solid #1a1e28', borderRadius: 6 }}>
+                      <span style={{ color: '#475569' }}>
+                        {['png','jpg','jpeg','gif','bmp','svg','webp'].includes(a.ext) ? <Image size={12} /> :
+                         ['mp3','wav','ogg','m4a','flac','aac'].includes(a.ext) ? <Music size={12} /> :
+                         ['mp4','mov','avi','mkv','webm'].includes(a.ext) ? <Video size={12} /> :
+                         <FileText size={12} />}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 11, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
+                        <div style={{ fontSize: 9, color: '#2a3042' }}>{a.ext.toUpperCase()} · {a.size < 1048576 ? `${(a.size/1024).toFixed(0)} KB` : `${(a.size/1048576).toFixed(1)} MB`}</div>
+                      </div>
+                      <Paperclip size={10} color="#2a3042" />
+                    </div>
+                  ))}
+                </div>
               </Section>
             )}
 
@@ -547,18 +616,27 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function Collapsible({ title, open, toggle, children, action }: { title: string; open: boolean; toggle: () => void; children: React.ReactNode; action?: React.ReactNode }) {
+function Collapsible({ title, open, toggle, children, action }: { title: React.ReactNode; open: boolean; toggle: () => void; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: open ? 10 : 0 }}>
         <button onClick={toggle} style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, background: 'none', border: 'none', cursor: 'pointer' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{title}</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'flex', alignItems: 'center', gap: 6 }}>{title}</div>
           <div style={{ flex: 1, height: 1, background: '#1a1e28' }} />
           {open ? <ChevronUp size={11} color="#475569" /> : <ChevronDown size={11} color="#475569" />}
         </button>
         {action}
       </div>
       {open && children}
+    </div>
+  )
+}
+
+function MissionRow({ label, value, mono, highlight }: { label: string; value: string; mono?: boolean; highlight?: boolean }) {
+  return (
+    <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #1a1e2844', padding: '5px 0' }}>
+      <div style={{ width: 120, fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0, paddingTop: 1 }}>{label}</div>
+      <div style={{ flex: 1, fontSize: 11, color: highlight ? '#a78bfa' : '#94a3b8', fontFamily: mono ? 'monospace' : 'inherit', wordBreak: 'break-all' }}>{value}</div>
     </div>
   )
 }

@@ -20,7 +20,24 @@ export type ObjectType =
   | 'aar'
   | 'mit'
 
+// ─── DIS-0001: Divad Identification Standard ──────────────────────────────────
+
+export type ObjectClass =
+  | 'Physical' | 'Logical' | 'Knowledge' | 'Reference' | 'Configuration'
+  | 'AI' | 'Workflow' | 'Relationship' | 'Evidence' | 'Observation'
+  | 'Reasoning' | 'Validation'
+
+export interface Attachment {
+  name: string
+  path: string
+  size: number
+  ext: string
+}
+
+// ─── Core Object Model ────────────────────────────────────────────────────────
+
 export interface EKEObject {
+  // Permanent identity (OBJ-XXXXXXXXX — never changes)
   id: string
   type: ObjectType
   title: string
@@ -34,6 +51,18 @@ export interface EKEObject {
   parent_id: string | null
   created_at: string
   updated_at: string
+
+  // Body — main markdown content; locked once approved
+  body: string | null
+
+  // DIS-0001 identity fields
+  engineering_id: string | null    // e.g. AR-KI-IP-000034-R03
+  obj_class: ObjectClass | null    // Physical, Logical, Knowledge, ...
+  dis_category: string | null      // AR, BU, KN, SW, HR, LG, MK, FN
+  dis_subsystem: string | null     // KI, OS, KC, ...
+  dis_type: string | null          // IP, SP, DR, KO, ...
+  short_name: string | null        // Human short name
+  aliases: string[]                // Array of aliases
 }
 
 export interface Revision {

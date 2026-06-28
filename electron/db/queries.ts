@@ -4,10 +4,7 @@ import { getDb, persist } from './schema.js'
 
 function now() { return new Date().toISOString() }
 
-// ── sql.js helpers ────────────────────────────────────────────────────────────
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SqlParams = any[]
+type SqlParams = import('sql.js').SqlValue[]
 
 async function all<T = Record<string, unknown>>(sql: string, params: SqlParams = []): Promise<T[]> {
   const db = await getDb()
@@ -32,13 +29,44 @@ async function run(sql: string, params: SqlParams = []): Promise<void> {
   persist()
 }
 
+// ── DIS-0001 ID generation ────────────────────────────────────────────────────
+
+async function nextPermanentId(): Promise<string> {
+  const cur = await getConfig('global_object_seq')
+  const next = (parseInt(cur ?? '0') + 1)
+  await setConfig('global_object_seq', String(next))
+  return `OBJ-${String(next).padStart(9, '0')}`
+}
+
+async function nextEngineeringId(category: string, subsystem: string, type: string, revision: number): Promise<string> {
+  const prefix = `${category}-${subsystem}-${type}`
+  const row = await get<{ next_seq: number }>('SELECT next_seq FROM dis_sequences WHERE eid_prefix = ?', [prefix])
+  let seq: number
+  if (!row) {
+    seq = 1
+    await run('INSERT INTO dis_sequences (eid_prefix, next_seq) VALUES (?, ?)', [prefix, 2])
+  } else {
+    seq = row.next_seq
+    await run('UPDATE dis_sequences SET next_seq = ? WHERE eid_prefix = ?', [seq + 1, prefix])
+  }
+  return `${prefix}-${String(seq).padStart(6, '0')}-R${String(revision).padStart(2, '0')}`
+}
+
+function bumpEidRevision(eid: string, newRevision: number): string {
+  // EID format: CAT-SUB-TYP-XXXXXX-RNN → bump revision suffix only
+  const m = eid.match(/^(.+-\d{6})-R\d+$/)
+  if (!m) return eid
+  return `${m[1]}-R${String(newRevision).padStart(2, '0')}`
+}
+
 // ── Serialization ─────────────────────────────────────────────────────────────
 
 function deserializeObject(row: Record<string, unknown>): EKEObject {
   return {
     ...(row as unknown as EKEObject),
-    tags: JSON.parse(row.tags as string),
-    metadata: JSON.parse(row.metadata as string),
+    tags:    JSON.parse((row.tags    as string) || '[]'),
+    metadata:JSON.parse((row.metadata as string) || '{}'),
+    aliases: JSON.parse((row.aliases  as string) || '[]'),
   }
 }
 
@@ -46,8 +74,8 @@ function deserializeObject(row: Record<string, unknown>): EKEObject {
 
 export async function listObjects(type?: string, status?: string): Promise<EKEObject[]> {
   let sql = 'SELECT * FROM eke_objects WHERE 1=1'
-  const params: unknown[] = []
-  if (type) { sql += ' AND type = ?'; params.push(type) }
+  const params: SqlParams = []
+  if (type)   { sql += ' AND type = ?';   params.push(type) }
   if (status) { sql += ' AND status = ?'; params.push(status) }
   sql += ' ORDER BY updated_at DESC'
   const rows = await all(sql, params)
@@ -59,14 +87,40 @@ export async function getObject(id: string): Promise<EKEObject | null> {
   return row ? deserializeObject(row) : null
 }
 
-export async function createObject(data: Omit<EKEObject, 'id' | 'created_at' | 'updated_at' | 'revision'>): Promise<EKEObject> {
-  const obj: EKEObject = { ...data, id: randomUUID(), revision: 1, created_at: now(), updated_at: now() }
+export async function createObject(
+  data: Omit<EKEObject, 'id' | 'created_at' | 'updated_at' | 'revision'>
+): Promise<EKEObject> {
+  const permanentId = await nextPermanentId()
+  const revision = 1
+
+  let engineering_id = data.engineering_id ?? null
+  if (!engineering_id && data.dis_category && data.dis_subsystem && data.dis_type) {
+    engineering_id = await nextEngineeringId(data.dis_category, data.dis_subsystem, data.dis_type, revision)
+  }
+
+  const obj: EKEObject = {
+    ...data,
+    id: permanentId,
+    revision,
+    engineering_id,
+    aliases: data.aliases ?? [],
+    created_at: now(),
+    updated_at: now(),
+  }
+
   await run(
-    `INSERT INTO eke_objects (id,type,title,description,status,owner,tags,priority,metadata,revision,parent_id,created_at,updated_at)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-    [obj.id, obj.type, obj.title, obj.description, obj.status, obj.owner,
-     JSON.stringify(obj.tags), obj.priority, JSON.stringify(obj.metadata),
-     obj.revision, obj.parent_id, obj.created_at, obj.updated_at]
+    `INSERT INTO eke_objects
+       (id,type,title,description,status,owner,tags,priority,metadata,revision,parent_id,created_at,updated_at,
+        body,engineering_id,obj_class,dis_category,dis_subsystem,dis_type,short_name,aliases)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    [
+      obj.id, obj.type, obj.title, obj.description, obj.status, obj.owner,
+      JSON.stringify(obj.tags), obj.priority, JSON.stringify(obj.metadata),
+      obj.revision, obj.parent_id, obj.created_at, obj.updated_at,
+      obj.body ?? null, obj.engineering_id, obj.obj_class ?? null,
+      obj.dis_category ?? null, obj.dis_subsystem ?? null, obj.dis_type ?? null,
+      obj.short_name ?? null, JSON.stringify(obj.aliases),
+    ]
   )
   await saveRevision(obj, 'Created')
   await logActivity('object_created', obj, `Object created: ${obj.title}`)
@@ -76,14 +130,50 @@ export async function createObject(data: Omit<EKEObject, 'id' | 'created_at' | '
 export async function updateObject(id: string, changes: Partial<EKEObject>): Promise<EKEObject | null> {
   const existing = await getObject(id)
   if (!existing) return null
-  const updated: EKEObject = { ...existing, ...changes, id, revision: existing.revision + 1, updated_at: now() }
+  const newRevision = existing.revision + 1
+
+  // Bump EID revision if one exists
+  let engineering_id = changes.engineering_id ?? existing.engineering_id
+  if (engineering_id) {
+    engineering_id = bumpEidRevision(engineering_id, newRevision)
+  } else if (
+    (changes.dis_category ?? existing.dis_category) &&
+    (changes.dis_subsystem ?? existing.dis_subsystem) &&
+    (changes.dis_type ?? existing.dis_type)
+  ) {
+    // DIS fields now set for the first time on an existing object
+    const cat = changes.dis_category ?? existing.dis_category!
+    const sub = changes.dis_subsystem ?? existing.dis_subsystem!
+    const typ = changes.dis_type ?? existing.dis_type!
+    engineering_id = await nextEngineeringId(cat, sub, typ, newRevision)
+  }
+
+  const updated: EKEObject = {
+    ...existing,
+    ...changes,
+    id,
+    revision: newRevision,
+    engineering_id,
+    aliases: changes.aliases ?? existing.aliases ?? [],
+    updated_at: now(),
+  }
+
   await run(
-    `UPDATE eke_objects SET title=?,description=?,status=?,owner=?,tags=?,priority=?,metadata=?,revision=?,updated_at=? WHERE id=?`,
-    [updated.title, updated.description, updated.status, updated.owner,
-     JSON.stringify(updated.tags), updated.priority, JSON.stringify(updated.metadata),
-     updated.revision, updated.updated_at, id]
+    `UPDATE eke_objects SET
+       title=?,description=?,status=?,owner=?,tags=?,priority=?,metadata=?,revision=?,updated_at=?,
+       body=?,engineering_id=?,obj_class=?,dis_category=?,dis_subsystem=?,dis_type=?,short_name=?,aliases=?
+     WHERE id=?`,
+    [
+      updated.title, updated.description, updated.status, updated.owner,
+      JSON.stringify(updated.tags), updated.priority, JSON.stringify(updated.metadata),
+      updated.revision, updated.updated_at,
+      updated.body ?? null, updated.engineering_id, updated.obj_class ?? null,
+      updated.dis_category ?? null, updated.dis_subsystem ?? null, updated.dis_type ?? null,
+      updated.short_name ?? null, JSON.stringify(updated.aliases),
+      id,
+    ]
   )
-  await saveRevision(updated, 'Updated')
+  await saveRevision(updated, changes.body ? 'Body revised' : 'Updated')
   await logActivity('object_updated', updated, `Revision ${updated.revision} saved`)
   return updated
 }

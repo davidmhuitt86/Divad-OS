@@ -86,6 +86,31 @@ export function registerHandlers(win: BrowserWindow, apiKey: string, assistantId
   ipcMain.handle('config:set', async (_e, { key, value }) => { await setConfig(key, value) })
 
   // GitHub
+  // ── Attachments ─────────────────────────────────────────────────────────────
+  ipcMain.handle('attachments:pick', async () => {
+    const result = await dialog.showOpenDialog(win, {
+      title: 'Select Attachments',
+      properties: ['openFile', 'multiSelections'],
+      filters: [
+        { name: 'Documents',   extensions: ['doc','docx','pdf','md','epub','txt','rtf'] },
+        { name: 'Images',      extensions: ['png','jpg','jpeg','gif','bmp','svg','webp'] },
+        { name: 'Audio',       extensions: ['mp3','wav','ogg','m4a','flac','aac'] },
+        { name: 'Video (<100 MB)', extensions: ['mp4','mov','avi','mkv','webm'] },
+        { name: 'All Files',   extensions: ['*'] },
+      ],
+    })
+    if (result.canceled || !result.filePaths.length) return []
+    return result.filePaths.map(fp => {
+      const stat = fs.statSync(fp)
+      return {
+        name: path.basename(fp),
+        path: fp,
+        size: stat.size,
+        ext:  path.extname(fp).toLowerCase().slice(1),
+      }
+    })
+  })
+
   ipcMain.handle('github:connect-test', async (_e, cfg) => testConnection(cfg))
 
   ipcMain.handle('github:sync', async (_e, cfg) => {

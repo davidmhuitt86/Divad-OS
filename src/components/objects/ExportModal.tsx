@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import { X, FileText, Printer, Send, Download, Clock, CheckCircle, Loader2, FileCheck, PenLine } from 'lucide-react'
 import type { EKEObject } from '../../../shared/types'
 
+type ExportRecord = {
+  id: string; object_id: string; object_title: string; format: string
+  file_path: string | null; signed_by: string | null; signed_title: string | null; signed_at: string | null; exported_at: string
+}
+type ExportResult = { saved: boolean; filePath?: string }
+
 interface Props {
   obj: EKEObject
   onClose: () => void

@@ -38,6 +38,10 @@ const api = {
     create: (sourceId: string, targetId: string, type: string) => ipcRenderer.invoke('relationships:create', { sourceId, targetId, type }),
     delete: (id: string) => ipcRenderer.invoke('relationships:delete', { id }),
   },
+  attachments: {
+    pick: (): Promise<{ name: string; path: string; size: number; ext: string }[]> =>
+      ipcRenderer.invoke('attachments:pick'),
+  },
   export: {
     savePdf:  (args: unknown) => ipcRenderer.invoke('export:save-pdf', args),
     saveDocx: (args: unknown) => ipcRenderer.invoke('export:save-docx', args),

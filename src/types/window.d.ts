@@ -1,4 +1,4 @@
-import type { EKEObject, ActivityEvent, AgentMessage, AppState, Relationship } from '../../shared/types'
+import type { EKEObject, ActivityEvent, AgentMessage, AppState, Relationship, Attachment } from '../../shared/types'
 
 interface DivadOSApi {
   objects: {
@@ -26,6 +26,9 @@ interface DivadOSApi {
     count:  () => Promise<number>
     create: (sourceId: string, targetId: string, type: string) => Promise<Relationship>
     delete: (id: string) => Promise<void>
+  }
+  attachments: {
+    pick: () => Promise<Attachment[]>
   }
   export: {
     savePdf:  (args: ExportArgs & { html: string }) => Promise<ExportResult>

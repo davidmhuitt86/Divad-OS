@@ -35,6 +35,10 @@ export function persist() {
   fs.writeFileSync(dbPath, Buffer.from(data))
 }
 
+function addCol(db: Database, col: string, def: string) {
+  try { db.run(`ALTER TABLE eke_objects ADD COLUMN ${col} ${def}`) } catch { /* already exists */ }
+}
+
 function runMigrations(db: Database) {
   db.run(`
     CREATE TABLE IF NOT EXISTS eke_objects (
@@ -113,5 +117,20 @@ function runMigrations(db: Database) {
     CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log(created_at);
     CREATE INDEX IF NOT EXISTS idx_revisions_object ON revisions(object_id);
     CREATE INDEX IF NOT EXISTS idx_exports_object ON export_records(object_id);
+
+    CREATE TABLE IF NOT EXISTS dis_sequences (
+      eid_prefix TEXT PRIMARY KEY,
+      next_seq INTEGER NOT NULL DEFAULT 1
+    );
   `)
+
+  // DIS-0001 v2 migration — add columns to existing tables
+  addCol(db, 'body',          'TEXT')
+  addCol(db, 'engineering_id','TEXT')
+  addCol(db, 'obj_class',     'TEXT')
+  addCol(db, 'dis_category',  'TEXT')
+  addCol(db, 'dis_subsystem', 'TEXT')
+  addCol(db, 'dis_type',      'TEXT')
+  addCol(db, 'short_name',    'TEXT')
+  addCol(db, 'aliases',       "TEXT NOT NULL DEFAULT '[]'")
 }

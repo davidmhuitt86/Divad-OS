@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, ChevronRight, ChevronLeft, Sparkles, Plus, Link2, Check, Loader2, Send, RotateCcw } from 'lucide-react'
+import { X, ChevronRight, ChevronLeft, Sparkles, Plus, Link2, Check, Loader2, Send, RotateCcw, Paperclip, Lock, ChevronDown, ChevronUp, FileText, Image, Music, Video } from 'lucide-react'
 import { useStore, isSyncCurrent } from '../../store'
-import type { EKEObject } from '../../../shared/types'
+import type { EKEObject, Attachment, ObjectClass } from '../../../shared/types'
+import { DIS_CATEGORIES, DIS_SUBSYSTEMS, DIS_TYPES, DIS_OBJECT_CLASSES } from '../../../shared/types/constants'
 
 // ─── Type Configuration ───────────────────────────────────────────────────────
 export const TYPE_CONFIG: Record<string, { icon: string; label: string; color: string }> = {
@@ -31,6 +32,7 @@ interface WizardState {
   objectType: string
   title: string
   description: string
+  body: string
   owner: string
   priority: 'low' | 'medium' | 'high' | 'critical'
   metadata: Record<string, unknown>
@@ -38,6 +40,17 @@ interface WizardState {
   tagInput: string
   linkedObjectIds: string[]
   repository: string
+  // DIS-0001 identity
+  disCategory: string
+  disSubsystem: string
+  disType: string
+  objClass: string
+  shortName: string
+  aliasInput: string
+  aliases: string[]
+  attachments: Attachment[]
+  // UI state
+  disOpen: boolean
   aiAssistOpen: boolean
   aiLoading: boolean
   aiResult: string
@@ -52,6 +65,7 @@ const DEFAULT_STATE: WizardState = {
   objectType: '',
   title: '',
   description: '',
+  body: '',
   owner: 'David',
   priority: 'medium',
   metadata: {},
@@ -59,6 +73,15 @@ const DEFAULT_STATE: WizardState = {
   tagInput: '',
   linkedObjectIds: [],
   repository: 'Divad Canon',
+  disCategory: '',
+  disSubsystem: '',
+  disType: '',
+  objClass: '',
+  shortName: '',
+  aliasInput: '',
+  aliases: [],
+  attachments: [],
+  disOpen: false,
   aiAssistOpen: false,
   aiLoading: false,
   aiResult: '',
@@ -86,12 +109,20 @@ export default function CreationWizard() {
           objectType: editingObject.type,
           title: editingObject.title,
           description: editingObject.description ?? '',
+          body: editingObject.body ?? '',
           owner: editingObject.owner ?? 'David',
           priority: editingObject.priority ?? 'medium',
           tags: editingObject.tags,
           linkedObjectIds: (m.linkedObjectIds as string[]) ?? [],
           repository: (m.repository as string) ?? 'Divad Canon',
           metadata: m,
+          disCategory: editingObject.dis_category ?? '',
+          disSubsystem: editingObject.dis_subsystem ?? '',
+          disType: editingObject.dis_type ?? '',
+          objClass: editingObject.obj_class ?? '',
+          shortName: editingObject.short_name ?? '',
+          aliases: editingObject.aliases ?? [],
+          attachments: (m.attachments as Attachment[]) ?? [],
           targetStatus: editingObject.status === 'archived' ? 'draft' : (editingObject.status as WizardState['targetStatus']),
           step: 2,
         })
@@ -125,15 +156,29 @@ export default function CreationWizard() {
     if (!isEditing && syncLocked) { upd({ error: 'Your last sync was more than 24 hours ago. Go to Repository → Sync to unlock creation.' }); return }
     upd({ creating: true, error: '' })
     try {
+      const disPayload = {
+        dis_category:  s.disCategory  || null,
+        dis_subsystem: s.disSubsystem || null,
+        dis_type:      s.disType      || null,
+        obj_class:     (s.objClass || null) as ObjectClass | null,
+        short_name:    s.shortName    || null,
+        aliases:       s.aliases,
+        body:          s.body.trim()  || null,
+      }
+
       if (isEditing) {
+        const bodyLocked = editingObject.status === 'approved' || editingObject.status === 'published'
         await window.divadOS.objects.update(editingObject.id, {
           title: s.title.trim(),
           description: s.description.trim() || null,
+          // Only update body if not locked (approved/published)
+          ...(bodyLocked ? {} : { body: s.body.trim() || null }),
           status: s.targetStatus,
           owner: s.owner || null,
           tags: s.tags,
           priority: s.priority,
-          metadata: { ...s.metadata, repository: s.repository, linkedObjectIds: s.linkedObjectIds },
+          metadata: { ...s.metadata, repository: s.repository, linkedObjectIds: s.linkedObjectIds, attachments: s.attachments },
+          ...disPayload,
         })
       } else {
         await window.divadOS.objects.create({
@@ -144,8 +189,10 @@ export default function CreationWizard() {
           owner: s.owner || null,
           tags: s.tags,
           priority: s.priority,
-          metadata: { ...s.metadata, repository: s.repository, linkedObjectIds: s.linkedObjectIds },
+          metadata: { ...s.metadata, repository: s.repository, linkedObjectIds: s.linkedObjectIds, attachments: s.attachments },
           parent_id: null,
+          engineering_id: null,
+          ...disPayload,
         })
       }
       await loadObjects()
@@ -221,7 +268,7 @@ export default function CreationWizard() {
           {/* Step content */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '6px 20px 12px' }}>
             {s.step === 1 && <Step1 s={s} upd={upd} />}
-            {s.step === 2 && <Step2 s={s} upd={upd} />}
+            {s.step === 2 && <Step2 s={s} upd={upd} editingObject={editingObject} />}
             {s.step === 3 && <Step3 s={s} upd={upd} />}
             {s.step === 4 && <Step4 s={s} upd={upd} onAI={handleAIAssist} />}
             {s.step === 5 && <Step5 s={s} upd={upd} isEditing={isEditing} />}
@@ -283,10 +330,43 @@ function Step1({ s, upd }: { s: WizardState; upd: (p: Partial<WizardState>) => v
 }
 
 // ─── Step 2: Describe ─────────────────────────────────────────────────────────
-function Step2({ s, upd }: { s: WizardState; upd: (p: Partial<WizardState>) => void }) {
+function Step2({ s, upd, editingObject }: { s: WizardState; upd: (p: Partial<WizardState>) => void; editingObject?: EKEObject | null }) {
   const meta = (key: string, val: unknown) => upd({ metadata: { ...s.metadata, [key]: val } })
   const m = s.metadata as Record<string, string>
   const cfg = TYPE_CONFIG[s.objectType] ?? { color: '#3b82f6' }
+  const isElectron = typeof window !== 'undefined' && !!window.divadOS
+  const bodyLocked = !!(editingObject && (editingObject.status === 'approved' || editingObject.status === 'published'))
+
+  const addAlias = () => {
+    const v = s.aliasInput.trim()
+    if (v && !s.aliases.includes(v)) upd({ aliases: [...s.aliases, v], aliasInput: '' })
+  }
+
+  const pickAttachments = async () => {
+    if (!isElectron) return
+    const picked = await window.divadOS.attachments.pick()
+    if (picked.length) {
+      // Deduplicate by path
+      const existing = new Set(s.attachments.map((a) => a.path))
+      const merged = [...s.attachments, ...picked.filter((p: Attachment) => !existing.has(p.path))]
+      upd({ attachments: merged })
+    }
+  }
+
+  const removeAttachment = (path: string) => upd({ attachments: s.attachments.filter((a) => a.path !== path) })
+
+  const attachIcon = (ext: string) => {
+    if (['png','jpg','jpeg','gif','bmp','svg','webp'].includes(ext)) return <Image size={11} />
+    if (['mp3','wav','ogg','m4a','flac','aac'].includes(ext)) return <Music size={11} />
+    if (['mp4','mov','avi','mkv','webm'].includes(ext)) return <Video size={11} />
+    return <FileText size={11} />
+  }
+
+  const fmtSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1048576) return `${(bytes/1024).toFixed(0)} KB`
+    return `${(bytes/1048576).toFixed(1)} MB`
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -294,7 +374,13 @@ function Step2({ s, upd }: { s: WizardState; upd: (p: Partial<WizardState>) => v
       <Field label="Title *">
         <Input value={s.title} onChange={v => upd({ title: v })} placeholder={`${TYPE_CONFIG[s.objectType]?.label ?? 'Object'} title...`} />
       </Field>
-      <Field label="Description — include everything you know">
+
+      {/* Short Name */}
+      <Field label="Short Name / Call Sign">
+        <Input value={s.shortName} onChange={v => upd({ shortName: v })} placeholder="Brief human-readable name (e.g. KIE Pipeline)" />
+      </Field>
+
+      <Field label="Context — include everything you know">
         <textarea value={s.description} onChange={e => upd({ description: e.target.value })}
           placeholder="Paste everything you have: conversation logs, brainstorm notes, AI chat transcripts, meeting summaries, external agent outputs, field observations, or raw ideas. The more context you provide here, the better your AI assistant can structure, summarize, and connect this knowledge."
           style={{ ...inputStyle, minHeight: 100, resize: 'vertical', lineHeight: 1.6 }} />
@@ -316,6 +402,129 @@ function Step2({ s, upd }: { s: WizardState; upd: (p: Partial<WizardState>) => v
         <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{TYPE_CONFIG[s.objectType]?.label} Details</div>
         <TypeFields type={s.objectType} m={m} meta={meta} cfg={cfg} />
       </div>
+
+      {/* Body — main markdown field, all object types */}
+      <div style={{ borderTop: '1px solid #1a1e2866', paddingTop: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Main Body (Markdown)</div>
+          {bodyLocked && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#ef444411', border: '1px solid #ef444433', borderRadius: 10, fontSize: 9, color: '#fca5a5' }}>
+              <Lock size={9} /> Locked — approved/published
+            </div>
+          )}
+        </div>
+        {bodyLocked
+          ? (
+            <div style={{ ...inputStyle, minHeight: 120, fontFamily: 'monospace', fontSize: 11, lineHeight: 1.6, overflowY: 'auto', color: '#475569', userSelect: 'none', cursor: 'not-allowed', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {s.body || '(no body)'}
+            </div>
+          )
+          : (
+            <textarea value={s.body} onChange={e => upd({ body: e.target.value })}
+              placeholder={`# ${s.title || 'Title'}\n\nWrite the full content here using Markdown. No character limit.\n\n## Section\nYour content...`}
+              style={{ ...inputStyle, minHeight: 160, fontFamily: 'monospace', fontSize: 11, resize: 'vertical', lineHeight: 1.6 }} />
+          )
+        }
+        {editingObject && !bodyLocked && editingObject.body && (
+          <div style={{ fontSize: 9, color: '#f59e0b', marginTop: 3 }}>
+            ⚠ Editing body will auto-increment the revision number.
+          </div>
+        )}
+      </div>
+
+      {/* DIS-0001 Identity Card */}
+      <div style={{ borderTop: '1px solid #1a1e2866', paddingTop: 10 }}>
+        <button onClick={() => upd({ disOpen: !s.disOpen })}
+          style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'none', border: 'none', cursor: 'pointer', padding: 0, width: '100%', marginBottom: s.disOpen ? 10 : 0 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1, textAlign: 'left' }}>DIS-0001 Engineering Identity</div>
+          {s.disOpen ? <ChevronUp size={13} color="#475569" /> : <ChevronDown size={13} color="#475569" />}
+        </button>
+        {s.disOpen && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {/* Preview of computed EID */}
+            {(s.disCategory && s.disSubsystem && s.disType) && (
+              <div style={{ padding: '8px 12px', background: '#0d0f14', border: '1px solid #1a1e28', borderRadius: 6, fontFamily: 'monospace', fontSize: 11, color: '#a78bfa' }}>
+                EID Preview: {s.disCategory}-{s.disSubsystem}-{s.disType}-XXXXXX-R01
+              </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+              <Field label="Category">
+                <select value={s.disCategory} onChange={e => upd({ disCategory: e.target.value })} style={selectStyle}>
+                  <option value="">—</option>
+                  {Object.entries(DIS_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{k} — {v}</option>)}
+                </select>
+              </Field>
+              <Field label="Subsystem">
+                <select value={s.disSubsystem} onChange={e => upd({ disSubsystem: e.target.value })} style={selectStyle}>
+                  <option value="">—</option>
+                  {Object.entries(DIS_SUBSYSTEMS).map(([k, v]) => <option key={k} value={k}>{k} — {v}</option>)}
+                </select>
+              </Field>
+              <Field label="Type Code">
+                <select value={s.disType} onChange={e => upd({ disType: e.target.value })} style={selectStyle}>
+                  <option value="">—</option>
+                  {Object.entries(DIS_TYPES).map(([k, v]) => <option key={k} value={k}>{k} — {v}</option>)}
+                </select>
+              </Field>
+            </div>
+            <Field label="Object Class">
+              <select value={s.objClass} onChange={e => upd({ objClass: e.target.value })} style={selectStyle}>
+                <option value="">—</option>
+                {DIS_OBJECT_CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </Field>
+            <Field label="Aliases">
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
+                {s.aliases.map(a => (
+                  <span key={a} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 8px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 12, fontSize: 10, color: '#94a3b8' }}>
+                    {a}
+                    <button onClick={() => upd({ aliases: s.aliases.filter(x => x !== a) })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', padding: 0, lineHeight: 1 }}>×</button>
+                  </span>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <Input value={s.aliasInput} onChange={v => upd({ aliasInput: v })} placeholder="Add alias..."
+                  onKeyDown={(e: React.KeyboardEvent) => { if (e.key === 'Enter') { e.preventDefault(); addAlias() } }} />
+                <button onClick={addAlias} style={{ padding: '6px 10px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 5, cursor: 'pointer', color: '#94a3b8', fontSize: 11 }}>
+                  <Plus size={12} />
+                </button>
+              </div>
+            </Field>
+          </div>
+        )}
+      </div>
+
+      {/* Attachments */}
+      <div style={{ borderTop: '1px solid #1a1e2866', paddingTop: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            Attachments {s.attachments.length > 0 && `(${s.attachments.length})`}
+          </div>
+          {isElectron && (
+            <button onClick={pickAttachments}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', background: '#1a1e28', border: '1px solid #222736', borderRadius: 5, cursor: 'pointer', fontSize: 10, color: '#94a3b8' }}>
+              <Paperclip size={11} /> Add Files
+            </button>
+          )}
+        </div>
+        {s.attachments.length === 0
+          ? <div style={{ fontSize: 10, color: '#2a3042', fontStyle: 'italic' }}>No files attached — supports doc, docx, pdf, md, epub, txt, images, audio, video (&lt;100 MB)</div>
+          : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {s.attachments.map((a) => (
+                <div key={a.path} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: '#0d0f14', border: '1px solid #1a1e28', borderRadius: 5 }}>
+                  <span style={{ color: '#475569' }}>{attachIcon(a.ext)}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</div>
+                    <div style={{ fontSize: 9, color: '#2a3042' }}>{a.ext.toUpperCase()} · {fmtSize(a.size)}</div>
+                  </div>
+                  <button onClick={() => removeAttachment(a.path)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#475569', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>×</button>
+                </div>
+              ))}
+            </div>
+          )
+        }
+      </div>
     </div>
   )
 }
@@ -329,11 +538,6 @@ function TypeFields({ type, m, meta }: { type: string; m: Record<string,string>;
             <option value="">Select type...</option>
             {['PRD','SOP','Standard','Business Plan','Manual','Constitution','Whitepaper','Report','README','Architecture','Specification'].map(t => <option key={t}>{t}</option>)}
           </select>
-        </Field>
-        <Field label="Content (Markdown)">
-          <textarea value={m.content ?? ''} onChange={e => meta('content', e.target.value)}
-            placeholder="# Title&#10;&#10;Start writing..."
-            style={{ ...inputStyle, minHeight: 120, fontFamily: 'monospace', fontSize: 11, resize: 'vertical' }} />
         </Field>
         <Field label="Version">
           <Input value={m.version ?? '1.0'} onChange={v => meta('version', v)} placeholder="1.0" />

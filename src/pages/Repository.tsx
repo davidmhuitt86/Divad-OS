@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Upload, Plus, ChevronDown, Github, FolderGit2, GitCommit, GitBranch, GitPullRequest } from 'lucide-react'
 import RepoStatCards  from '../components/repository/RepoStatCards'
-import RepoList       from '../components/repository/RepoList'
+import RepoList, { type GroupKey } from '../components/repository/RepoList'
 import FileExplorer   from '../components/repository/FileExplorer'
 import RepoRightPanel from '../components/repository/RepoRightPanel'
 import RepoBottomRow  from '../components/repository/RepoBottomRow'
@@ -10,12 +10,7 @@ import LayoutPanel from '../components/layout/LayoutPanel'
 import LayoutLock  from '../components/layout/LayoutLock'
 import { usePageLayout } from '../hooks/usePageLayout'
 import { useStore }   from '../store'
-
-const REPO_NAMES: Record<string, string> = {
-  '1': 'DIVAD-OS-CORE', '2': 'EKE-KNOWLEDGE-ENGINE', '3': 'DIVAD-OS-FRONTEND',
-  '4': 'DIVAD-OS-MOBILE', '5': 'DOCUMENTATION', '6': 'ARCHITECTURE-MODELS',
-  '7': 'INFRASTRUCTURE', '8': 'TEMPLATES',
-}
+import type { EKEObject } from '../../shared/types'
 
 const PANELS = ['statCards', 'repoList', 'fileExplorer', 'rightPanel', 'bottomRow']
 
@@ -27,10 +22,11 @@ const SUB_TABS = [
 ]
 
 export default function Repository() {
-  const [selectedRepo, setSelectedRepo] = useState('1')
-  const [activeTab,    setActiveTab]    = useState<'browse' | 'github'>('github')
+  const [groupKey,     setGroupKey]     = useState<GroupKey>('all')
+  const [selectedObj,  setSelectedObj]  = useState<EKEObject | null>(null)
+  const [activeTab,    setActiveTab]    = useState<'browse' | 'github'>('browse')
   const [browseTab,    setBrowseTab]    = useState('explorer')
-  const { githubConfig, openWizard, setActivePage } = useStore()
+  const { openWizard, setActivePage } = useStore()
   const layout = usePageLayout('repository', PANELS)
 
   return (
@@ -82,16 +78,16 @@ export default function Repository() {
 
           <div style={layout.unlocked ? { display: 'flex', flexWrap: 'wrap', gap: 10, flex: 1, minHeight: 0 } : { display: 'flex', gap: 10, flex: 1, minHeight: 0 }}>
             <LayoutPanel id="repoList" layout={layout} lockedStyle={{ flexShrink: 0 }}>
-              <RepoList selected={selectedRepo} onSelect={setSelectedRepo} />
+              <RepoList selected={groupKey} onSelect={k => { setGroupKey(k); setSelectedObj(null) }} />
             </LayoutPanel>
             <LayoutPanel id="fileExplorer" layout={layout} lockedStyle={{ flex: 1, minWidth: 0 }}>
-              {browseTab === 'explorer'     && <FileExplorer repoName={REPO_NAMES[selectedRepo] ?? 'REPOSITORY'} />}
-              {browseTab === 'commits'      && <CommitsPlaceholder repoName={REPO_NAMES[selectedRepo] ?? ''} />}
-              {browseTab === 'branches'     && <BranchesPlaceholder repoName={REPO_NAMES[selectedRepo] ?? ''} />}
-              {browseTab === 'pullrequests' && <PRsPlaceholder repoName={REPO_NAMES[selectedRepo] ?? ''} />}
+              {browseTab === 'explorer'     && <FileExplorer groupKey={groupKey} selectedId={selectedObj?.id ?? null} onSelect={setSelectedObj} />}
+              {browseTab === 'commits'      && <CommitsPlaceholder />}
+              {browseTab === 'branches'     && <BranchesPlaceholder />}
+              {browseTab === 'pullrequests' && <PRsPlaceholder />}
             </LayoutPanel>
             <LayoutPanel id="rightPanel" layout={layout} lockedStyle={{ flexShrink: 0 }}>
-              <RepoRightPanel repoName={REPO_NAMES[selectedRepo]?.split('-').map(w => w[0] + w.slice(1).toLowerCase()).join('-') ?? 'Repository'} />
+              <RepoRightPanel obj={selectedObj} />
             </LayoutPanel>
           </div>
 
@@ -106,12 +102,12 @@ export default function Repository() {
   )
 }
 
-function CommitsPlaceholder({ repoName }: { repoName: string }) {
+function CommitsPlaceholder() {
   const { setActivePage } = useStore()
   return (
     <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ padding: '10px 14px', borderBottom: '1px solid #1a1e28', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Commits — {repoName}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Commits</span>
         <button onClick={() => setActivePage('settings')} style={{ fontSize: 10, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer' }}>Connect GitHub →</button>
       </div>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
@@ -122,11 +118,11 @@ function CommitsPlaceholder({ repoName }: { repoName: string }) {
   )
 }
 
-function BranchesPlaceholder({ repoName }: { repoName: string }) {
+function BranchesPlaceholder() {
   return (
     <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ padding: '10px 14px', borderBottom: '1px solid #1a1e28' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Branches — {repoName}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Branches</span>
       </div>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
         <GitBranch size={28} style={{ color: '#2a3042' }} />
@@ -136,11 +132,11 @@ function BranchesPlaceholder({ repoName }: { repoName: string }) {
   )
 }
 
-function PRsPlaceholder({ repoName }: { repoName: string }) {
+function PRsPlaceholder() {
   return (
     <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, flex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ padding: '10px 14px', borderBottom: '1px solid #1a1e28' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Pull Requests — {repoName}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Pull Requests</span>
       </div>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
         <GitPullRequest size={28} style={{ color: '#2a3042' }} />
