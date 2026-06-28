@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 
-const STORAGE_KEY = 'divad-layout-v1'
+const STORAGE_KEY    = 'divad-layout-v1'
+const INACTIVITY_MS  = 90_000   // 90 s of no layout interaction → auto-relock
 
 export interface PanelState {
   visible: boolean
@@ -25,6 +26,7 @@ export function usePageLayout(pageId: string, panelIds: string[]) {
   const [holdShow,    setHoldShow]    = useState(false)
   const [dragFrom,    setDragFrom]    = useState<string | null>(null)
   const [data,        setData]        = useState<AllData>(load)
+  const inactivityRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const page = data[pageId] ?? {}
 
@@ -33,6 +35,22 @@ export function usePageLayout(pageId: string, panelIds: string[]) {
     [page, panelIds]
   )
 
+  // ── Auto-relock on inactivity ───────────────────────────────────────────────
+  const bumpActivity = useCallback(() => {
+    if (inactivityRef.current) clearTimeout(inactivityRef.current)
+    inactivityRef.current = setTimeout(() => setUnlocked(false), INACTIVITY_MS)
+  }, [])
+
+  useEffect(() => {
+    if (unlocked) {
+      bumpActivity()
+    } else {
+      if (inactivityRef.current) clearTimeout(inactivityRef.current)
+    }
+    return () => { if (inactivityRef.current) clearTimeout(inactivityRef.current) }
+  }, [unlocked, bumpActivity])
+
+  // ── Mutators ────────────────────────────────────────────────────────────────
   function mutate(id: string, patch: Partial<PanelState>) {
     setData(prev => {
       const pg   = { ...(prev[pageId] ?? {}) }
@@ -43,9 +61,9 @@ export function usePageLayout(pageId: string, panelIds: string[]) {
     })
   }
 
-  const togglePanel = (id: string) => mutate(id, { visible: !getPanel(id).visible })
-  const setSize     = (id: string, w: number, h: number) => mutate(id, { w, h })
-  const fitSize     = (id: string) => mutate(id, { w: undefined, h: undefined })
+  const togglePanel  = (id: string) => { mutate(id, { visible: !getPanel(id).visible }); bumpActivity() }
+  const setSize      = (id: string, w: number, h: number) => { mutate(id, { w, h }); bumpActivity() }
+  const fitSize      = (id: string) => { mutate(id, { w: undefined, h: undefined }); bumpActivity() }
 
   function swapOrder(a: string, b: string) {
     const oa = getPanel(a).order
@@ -58,11 +76,12 @@ export function usePageLayout(pageId: string, panelIds: string[]) {
       persist(next)
       return next
     })
+    bumpActivity()
   }
 
   function showAllPanels() {
     setData(prev => {
-      const pg   = { ...(prev[pageId] ?? {}) }
+      const pg = { ...(prev[pageId] ?? {}) }
       panelIds.forEach((id, i) => { pg[id] = { ...(pg[id] ?? { order: i }), visible: true } })
       const next = { ...prev, [pageId]: pg }
       persist(next)
@@ -70,15 +89,15 @@ export function usePageLayout(pageId: string, panelIds: string[]) {
     })
   }
 
-  const sorted = [...panelIds].sort((a, b) => getPanel(a).order - getPanel(b).order)
+  const sorted     = [...panelIds].sort((a, b) => getPanel(a).order - getPanel(b).order)
   const hiddenCount = panelIds.filter(id => !getPanel(id).visible).length
-  const showAll = sessionShow || holdShow
+  const showAll    = sessionShow || holdShow
 
   return {
     unlocked,
-    toggleUnlock:       () => setUnlocked(u => !u),
+    toggleUnlock:      () => setUnlocked(u => !u),
     sessionShow,
-    toggleSessionShow:  () => setSessionShow(s => !s),
+    toggleSessionShow: () => setSessionShow(s => !s),
     holdShow,
     setHoldShow,
     showAll,
@@ -86,13 +105,14 @@ export function usePageLayout(pageId: string, panelIds: string[]) {
     setDragFrom,
     sorted,
     getPanel,
-    isVisible:          (id: string) => showAll || getPanel(id).visible,
+    isVisible:         (id: string) => showAll || getPanel(id).visible,
     togglePanel,
     setSize,
     fitSize,
     swapOrder,
     showAllPanels,
     hiddenCount,
+    bumpActivity,
   }
 }
 

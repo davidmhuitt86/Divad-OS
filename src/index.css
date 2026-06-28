@@ -23,6 +23,10 @@ html, body {
   color: #e2e8f0;
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 13px;
+  font-weight: 450;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 ::-webkit-scrollbar {
@@ -49,10 +53,10 @@ html, body {
 
 .panel-title {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #475569;
+  color: #94a3b8;
 }
 
 .status-dot {
@@ -89,9 +93,35 @@ html, body {
   justify-content: center;
   height: 100%;
   min-height: 80px;
-  color: #2a3042;
+  color: #64748b;
   font-size: 11px;
+  font-weight: 500;
   gap: 6px;
+}
+
+/* ─── Global text-contrast overrides ────────────────────────────────────────
+   Inline styles throughout the app use #2a3042 and #475569 for muted/label
+   text — both nearly invisible on dark backgrounds. These rules lift them
+   to readable contrast levels without touching the dark background theme. */
+
+/* Very-dark near-invisible text → visible slate */
+[style*="color: rgb(42, 48, 66)"],
+[style*="color:#2a3042"] {
+  color: #64748b !important;
+}
+
+/* Standard muted labels → readable slate */
+[style*="color: rgb(71, 85, 105)"],
+[style*="color:#475569"] {
+  color: #94a3b8 !important;
+}
+
+/* Thin weight on small inline text — bump to medium */
+[style*="fontSize: 9"],
+[style*="fontSize: 10"],
+[style*="font-size: 9px"],
+[style*="font-size: 10px"] {
+  font-weight: 500;
 }
 
 @keyframes pulse-dot {
