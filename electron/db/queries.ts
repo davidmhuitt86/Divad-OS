@@ -189,17 +189,18 @@ export async function setConfig(key: string, value: string) {
 // ── App State ─────────────────────────────────────────────────────────────────
 
 export async function getAppState() {
-  const [apId, apoId, aptId, mitId, mission] = await Promise.all([
-    getConfig('current_ap_id'), getConfig('current_apo_id'),
+  const [apId, apmId, apoId, aptId, mitId, mission] = await Promise.all([
+    getConfig('current_ap_id'), getConfig('current_apm_id'), getConfig('current_apo_id'),
     getConfig('current_apt_id'), getConfig('current_mit_id'), getConfig('mission'),
   ])
-  const [currentAP, currentAPO, currentAPT, currentMIT] = await Promise.all([
+  const [currentAP, currentAPM, currentAPO, currentAPT, currentMIT] = await Promise.all([
     apId  ? getObject(apId)  : Promise.resolve(null),
+    apmId ? getObject(apmId) : Promise.resolve(null),
     apoId ? getObject(apoId) : Promise.resolve(null),
     aptId ? getObject(aptId) : Promise.resolve(null),
     mitId ? getObject(mitId) : Promise.resolve(null),
   ])
-  return { currentAP, currentAPO, currentAPT, currentMIT, mission: mission ?? 'Build the Engineering Knowledge Engine' }
+  return { currentAP, currentAPM, currentAPO, currentAPT, currentMIT, mission: mission ?? 'Build the Engineering Knowledge Engine' }
 }
 
 // ── Graph Snapshot ────────────────────────────────────────────────────────────

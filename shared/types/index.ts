@@ -82,6 +82,7 @@ export interface AgentToolCall {
 
 export interface AppState {
   currentAP: EKEObject | null
+  currentAPM: EKEObject | null
   currentAPO: EKEObject | null
   currentAPT: EKEObject | null
   currentMIT: EKEObject | null

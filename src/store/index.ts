@@ -71,7 +71,7 @@ interface Store {
 
 export const useStore = create<Store>((set, get) => ({
   appState: {
-    currentAP: null, currentAPO: null, currentAPT: null,
+    currentAP: null, currentAPM: null, currentAPO: null, currentAPT: null,
     currentMIT: null, mission: 'Build the Engineering Knowledge Engine',
   },
   loadAppState: async () => {
