@@ -4,21 +4,83 @@ import {
   Briefcase, BarChart2, Calendar, Settings, Workflow,
   Plus, FileText, GitBranch, ListChecks, Upload, Bot,
   ChevronDown, Send, Loader2, ExternalLink,
+  History, Share2, HelpCircle, ClipboardList, AlertTriangle, Wand2,
+  Users, Activity, ClipboardCheck,
 } from 'lucide-react'
 import { useStore } from '../../store'
 
-const NAV = [
-  { id: 'home',         label: 'Dashboard',    icon: Home            },
-  { id: 'operations',   label: 'Operations',   icon: LayoutDashboard },
-  { id: 'architecture', label: 'Architecture', icon: Cpu             },
-  { id: 'repository',   label: 'Repository',   icon: FolderGit2      },
-  { id: 'knowledge',    label: 'Knowledge',    icon: Brain           },
-  { id: 'objects',      label: 'Objects',      icon: Box             },
-  { id: 'workspace',    label: 'Workspace',    icon: Briefcase       },
-  { id: 'engineering-workspace', label: 'Engineering Workspace', icon: Workflow },
-  { id: 'reports',      label: 'Reports',      icon: BarChart2       },
-  { id: 'calendar',     label: 'Calendar',     icon: Calendar        },
+interface NavItem {
+  id: string
+  label: string
+  icon: React.ElementType
+  implemented: boolean
+  dot?: 'live' | 'ai'
+}
+
+interface NavSection {
+  label: string
+  badge?: string
+  items: NavItem[]
+}
+
+// Navigation reorganized per AP-002 Milestone 4 sidebar redesign.
+// Existing working pages are folded into the closest-fitting section;
+// sections/items with no page built yet are marked implemented: false.
+const NAV_SECTIONS: NavSection[] = [
+  {
+    label: 'Workspace',
+    items: [
+      { id: 'home',                  label: 'Dashboard',             icon: Home,       implemented: true },
+      { id: 'engineering-workspace', label: 'Engineering Workspace', icon: Workflow,   implemented: true, dot: 'live' },
+      { id: 'workspace',             label: 'Workspace',             icon: Briefcase,  implemented: true },
+      { id: 'calendar',              label: 'Calendar',              icon: Calendar,   implemented: true },
+      { id: 'sessions',              label: 'Sessions',              icon: History,    implemented: false },
+      { id: 'drafts',                label: 'Drafts',                icon: FileText,   implemented: false },
+      { id: 'commit-history',        label: 'Commit History',        icon: GitBranch,  implemented: false },
+    ],
+  },
+  {
+    label: 'Knowledge',
+    items: [
+      { id: 'knowledge',            label: 'Knowledge',            icon: Brain,         implemented: true },
+      { id: 'objects',               label: 'Universal Objects',    icon: Box,           implemented: true },
+      { id: 'architecture',          label: 'Architecture',         icon: Cpu,           implemented: true },
+      { id: 'knowledge-candidates',  label: 'Knowledge Candidates', icon: HelpCircle,    implemented: false },
+      { id: 'relationships',         label: 'Relationships',        icon: Share2,        implemented: false },
+      { id: 'evidence',              label: 'Evidence',             icon: ClipboardList, implemented: false },
+    ],
+  },
+  {
+    label: 'Visualization',
+    items: [
+      { id: 'knowledge-graph', label: 'Knowledge Graph', icon: Share2,  implemented: false },
+      { id: 'timeline',        label: 'Timeline',        icon: History, implemented: false },
+    ],
+  },
+  {
+    label: 'Analysis',
+    badge: 'AI',
+    items: [
+      { id: 'assistant',              label: 'Reasoning',              icon: Bot,           implemented: true, dot: 'ai' },
+      { id: 'reports',                label: 'Reports',                icon: BarChart2,     implemented: true },
+      { id: 'conflicts',              label: 'Conflicts / Warnings',   icon: AlertTriangle, implemented: false },
+      { id: 'suggested-corrections',  label: 'Suggested Corrections',  icon: Wand2,         implemented: false },
+    ],
+  },
+  {
+    label: 'Administration',
+    items: [
+      { id: 'settings',      label: 'Settings',      icon: Settings,        implemented: true },
+      { id: 'repository',    label: 'Repository',    icon: FolderGit2,      implemented: true },
+      { id: 'operations',    label: 'Operations',    icon: LayoutDashboard, implemented: true },
+      { id: 'users',         label: 'Users',         icon: Users,           implemented: false },
+      { id: 'system-health', label: 'System Health', icon: Activity,        implemented: false },
+      { id: 'audit-log',     label: 'Audit Log',     icon: ClipboardCheck,  implemented: false },
+    ],
+  },
 ]
+
+const DOT_COLOR: Record<'live' | 'ai', string> = { live: '#3b82f6', ai: '#a855f7' }
 
 const QUICK_ACTIONS = [
   { label: 'New Object',       icon: Plus,       type: undefined            },
@@ -29,8 +91,8 @@ const QUICK_ACTIONS = [
   { label: 'Upload File',      icon: Upload,     type: undefined            },
 ]
 
-function NavButton({ id, label, Icon, active, onClick }: {
-  id: string; label: string; Icon: React.ElementType; active: boolean; onClick: () => void
+function NavButton({ id, label, Icon, active, onClick, dot }: {
+  id: string; label: string; Icon: React.ElementType; active: boolean; onClick: () => void; dot?: 'live' | 'ai'
 }) {
   const [hovered, setHovered] = useState(false)
   const bg     = active ? 'rgba(59,130,246,0.1)' : hovered ? '#1a1e28' : 'transparent'
@@ -44,8 +106,34 @@ function NavButton({ id, label, Icon, active, onClick }: {
       style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '8px 14px', textAlign: 'left', border: 'none', cursor: 'pointer', fontSize: 12.5, background: bg, color, borderRight: border, transition: 'all 0.1s' }}
     >
       <Icon size={14} />
-      <span>{label}</span>
+      <span style={{ flex: 1 }}>{label}</span>
+      {dot && <span style={{ width: 6, height: 6, borderRadius: '50%', background: DOT_COLOR[dot], boxShadow: `0 0 5px ${DOT_COLOR[dot]}aa`, flexShrink: 0 }} />}
     </button>
+  )
+}
+
+// Sub-item whose page hasn't been built yet — visible per the sidebar
+// redesign reference but inert until its page ships.
+function PlaceholderNavItem({ label, Icon }: { label: string; Icon: React.ElementType }) {
+  return (
+    <div
+      title="Coming soon"
+      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '8px 14px', fontSize: 12.5, color: '#3f4759', cursor: 'not-allowed' }}
+    >
+      <Icon size={14} />
+      <span>{label}</span>
+    </div>
+  )
+}
+
+function SectionHeader({ label, badge }: { label: string; badge?: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px 4px' }}>
+      <span style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.12em' }}>{label}</span>
+      {badge && (
+        <span style={{ fontSize: 8, fontWeight: 700, color: '#a855f7', border: '1px solid #a855f755', background: '#a855f715', borderRadius: 3, padding: '0 4px' }}>{badge}</span>
+      )}
+    </div>
   )
 }
 
@@ -176,9 +264,16 @@ export default function Sidebar() {
 
       {/* Main nav */}
       <nav style={{ overflowY: 'auto', flex: 1 }}>
-        <div style={{ padding: '6px 0 2px' }}>
-          {NAV.map(({ id, label, icon: Icon }) => (
-            <NavButton key={id} id={id} label={label} Icon={Icon} active={activePage === id} onClick={() => setActivePage(id)} />
+        <div style={{ padding: '2px 0 2px' }}>
+          {NAV_SECTIONS.map((section, i) => (
+            <div key={section.label} style={i > 0 ? { borderTop: '1px solid #1a1e2866', marginTop: 2 } : undefined}>
+              <SectionHeader label={section.label} badge={section.badge} />
+              {section.items.map(({ id, label, icon: Icon, implemented, dot }) => (
+                implemented
+                  ? <NavButton key={id} id={id} label={label} Icon={Icon} active={activePage === id} onClick={() => setActivePage(id)} dot={dot} />
+                  : <PlaceholderNavItem key={id} label={label} Icon={Icon} />
+              ))}
+            </div>
           ))}
         </div>
 
