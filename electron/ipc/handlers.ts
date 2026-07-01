@@ -115,7 +115,11 @@ export function registerHandlers(win: BrowserWindow, apiKey: string, assistantId
 
   ipcMain.handle('github:sync', async (_e, cfg) => {
     const objects = await listObjects()
-    return performSync(cfg, objects)
+    const result = await performSync(cfg, objects)
+    if (result.success && result.syncedAt) {
+      await setConfig('github_last_sync', result.syncedAt)
+    }
+    return result
   })
 
   ipcMain.handle('github:last-sync', async () => getConfig('github_last_sync'))

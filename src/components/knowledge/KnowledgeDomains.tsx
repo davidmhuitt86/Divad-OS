@@ -1,27 +1,27 @@
-﻿import type { EKEObject } from '../../../shared/types'
+import type { EKEObject } from '../../../shared/types'
 import { useStore } from '../../store'
 
 interface Props { objects: EKEObject[] }
 
 const TYPE_LABEL: Record<string, string> = {
-  document:          'Documents',
-  task:              'Tasks',
-  knowledge_object:  'Knowledge Objects',
-  decision:          'Decisions',
-  architecture_phase:'Architecture Phases',
-  research:          'Research',
-  meeting:           'Meetings',
-  journal:           'Journal',
-  product:           'Products',
-  requirement:       'Requirements',
-  risk:              'Risks',
-  question:          'Questions',
-  standard:          'Standards',
-  apo:               'APOs',
-  apt:               'APTs',
-  apm:               'APMs',
-  aar:               'AARs',
-  mit:               'MITs',
+  document: 'Documents',
+  task: 'Tasks',
+  knowledge_object: 'Knowledge Objects',
+  decision: 'Decisions',
+  architecture_phase: 'Architecture Phases',
+  research: 'Research',
+  meeting: 'Meetings',
+  journal: 'Journal',
+  product: 'Products',
+  requirement: 'Requirements',
+  risk: 'Risks',
+  question: 'Questions',
+  standard: 'Standards',
+  apo: 'APOs',
+  apt: 'APTs',
+  apm: 'APMs',
+  aar: 'AARs',
+  mit: 'MITs',
 }
 
 const TYPE_COLOR: Record<string, string> = {
@@ -32,7 +32,6 @@ const TYPE_COLOR: Record<string, string> = {
 
 export default function KnowledgeDomains({ objects }: Props) {
   const { navigateToObjects } = useStore()
-  // Group by type
   const byType: Record<string, EKEObject[]> = {}
   for (const o of objects) {
     if (!byType[o.type]) byType[o.type] = []
@@ -41,7 +40,6 @@ export default function KnowledgeDomains({ objects }: Props) {
   const sorted = Object.entries(byType).sort((a, b) => b[1].length - a[1].length)
   const maxCount = sorted[0]?.[1].length ?? 1
 
-  // Most connected (by parent_id references)
   const parentCounts: Record<string, number> = {}
   for (const o of objects) {
     if (o.parent_id) parentCounts[o.parent_id] = (parentCounts[o.parent_id] ?? 0) + 1
@@ -49,7 +47,6 @@ export default function KnowledgeDomains({ objects }: Props) {
   const topParent = Object.entries(parentCounts).sort((a, b) => b[1] - a[1])[0]
   const topParentObj = topParent ? objects.find(o => o.id === topParent[0]) : null
 
-  // Fastest growing type (last 7 days)
   const cutoff = new Date(Date.now() - 7 * 86400000).toISOString()
   const recentByType: Record<string, number> = {}
   for (const o of objects) {
@@ -59,7 +56,6 @@ export default function KnowledgeDomains({ objects }: Props) {
 
   return (
     <div style={{ width: 260, display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0 }}>
-      {/* Object Types */}
       <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '9px 12px', borderBottom: '1px solid #1a1e28', flexShrink: 0 }}>
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569' }}>Object Types</span>
@@ -87,19 +83,18 @@ export default function KnowledgeDomains({ objects }: Props) {
         </div>
       </div>
 
-      {/* Insights */}
       <div style={{ background: '#13161e', border: '1px solid #1a1e28', borderRadius: 8, overflow: 'hidden' }}>
         <div style={{ padding: '9px 12px', borderBottom: '1px solid #1a1e28' }}>
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569' }}>Knowledge Insights</span>
         </div>
         <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <InsightRow icon="ðŸ”—" label="Most Referenced Object"
-            title={topParentObj?.title ?? 'â€”'}
+          <InsightRow code="REF" label="Most Referenced Object"
+            title={topParentObj?.title ?? '-'}
             sub={topParent ? `Referenced by ${topParent[1]} object${topParent[1] === 1 ? '' : 's'}` : 'No references found'} />
-          <InsightRow icon="ðŸ“ˆ" label="Fastest Growing Type (7 days)"
-            title={fastestType ? (TYPE_LABEL[fastestType[0]] ?? fastestType[0]) : 'â€”'}
+          <InsightRow code="GROW" label="Fastest Growing Type (7 days)"
+            title={fastestType ? (TYPE_LABEL[fastestType[0]] ?? fastestType[0]) : '-'}
             sub={fastestType ? `+${fastestType[1]} this week` : 'No new objects this week'} />
-          <InsightRow icon="ðŸ“Š" label="Total Objects"
+          <InsightRow code="SUM" label="Total Objects"
             title={String(objects.length)}
             sub={`Across ${sorted.length} type${sorted.length !== 1 ? 's' : ''}`} />
         </div>
@@ -108,10 +103,10 @@ export default function KnowledgeDomains({ objects }: Props) {
   )
 }
 
-function InsightRow({ icon, label, title, sub }: { icon: string; label: string; title: string; sub: string }) {
+function InsightRow({ code, label, title, sub }: { code: string; label: string; title: string; sub: string }) {
   return (
     <div style={{ display: 'flex', gap: 8 }}>
-      <div style={{ width: 28, height: 28, borderRadius: 6, background: '#1a1e28', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>{icon}</div>
+      <div style={{ width: 34, height: 28, borderRadius: 6, background: '#1a1e28', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 800, color: '#94a3b8', flexShrink: 0 }}>{code}</div>
       <div>
         <div style={{ fontSize: 9, color: '#475569', marginBottom: 2 }}>{label}</div>
         <div style={{ fontSize: 11, fontWeight: 600, color: '#e2e8f0' }}>{title}</div>
@@ -120,4 +115,3 @@ function InsightRow({ icon, label, title, sub }: { icon: string; label: string; 
     </div>
   )
 }
-

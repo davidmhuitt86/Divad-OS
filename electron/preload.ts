@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
+const ALLOWED_EVENTS = new Set(['activity:new', 'state:refresh'])
+
 const api = {
   objects: {
     list:    (opts?: { type?: string; status?: string }) => ipcRenderer.invoke('objects:list', opts),
@@ -50,7 +52,9 @@ const api = {
     history:  (objectId: string) => ipcRenderer.invoke('export:history', { objectId }),
   },
   on: (channel: string, cb: (...args: unknown[]) => void) => {
-    // Must store the wrapper reference — removeListener won't match an anonymous function
+    if (!ALLOWED_EVENTS.has(channel)) {
+      throw new Error(`Unsupported event channel: ${channel}`)
+    }
     const handler = (_e: Electron.IpcRendererEvent, ...args: unknown[]) => cb(...args)
     ipcRenderer.on(channel, handler)
     return () => ipcRenderer.removeListener(channel, handler)

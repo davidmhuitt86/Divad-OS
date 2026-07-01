@@ -19,7 +19,7 @@ export default function KnowledgeRightPanel({ objects }: Props) {
     ? objects.filter(o => o.title.toLowerCase().includes(query.toLowerCase()) || o.type.includes(query.toLowerCase()))
     : []
 
-  // Recent â€” sort by updated_at
+  // Recent - sort by updated_at
   const recentActivity = [...objects]
     .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
     .slice(0, 5)
@@ -114,7 +114,7 @@ export default function KnowledgeRightPanel({ objects }: Props) {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 11, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.title}</div>
-                <div style={{ fontSize: 9, color: '#475569', marginTop: 1 }}>{o.type.replace(/_/g,' ')} Â· {o.status}</div>
+                <div style={{ fontSize: 9, color: '#475569', marginTop: 1 }}>{o.type.replace(/_/g,' ')} - {o.status}</div>
               </div>
             </div>
           ))}
