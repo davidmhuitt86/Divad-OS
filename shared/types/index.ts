@@ -151,13 +151,6 @@ export interface WorkspaceAnalysis {
   confidence: number
 }
 
-export interface WorkspaceAnalyzeResult {
-  success: boolean
-  workspaceId?: string
-  analysis?: WorkspaceAnalysis
-  error?: string
-}
-
 export interface IpcChannels {
   'objects:list': { type?: ObjectType; status?: ObjectStatus }
   'objects:get': { id: string }

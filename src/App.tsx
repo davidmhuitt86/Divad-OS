@@ -13,6 +13,21 @@ import Reports from './pages/Reports'
 import Calendar from './pages/Calendar'
 import Settings from './pages/Settings'
 import Assistant from './pages/Assistant'
+import Sessions from './pages/Sessions'
+import Drafts from './pages/Drafts'
+import CommitHistory from './pages/CommitHistory'
+import UniversalObjects from './pages/UniversalObjects'
+import KnowledgeCandidates from './pages/KnowledgeCandidates'
+import Relationships from './pages/Relationships'
+import Evidence from './pages/Evidence'
+import Graph from './pages/Graph'
+import Timeline from './pages/Timeline'
+import Reasoning from './pages/Reasoning'
+import ConflictsWarnings from './pages/ConflictsWarnings'
+import SuggestedCorrections from './pages/SuggestedCorrections'
+import Users from './pages/Users'
+import SystemHealth from './pages/SystemHealth'
+import AuditLog from './pages/AuditLog'
 import CreationWizard from './components/wizard/CreationWizard'
 import ObjectViewer from './components/objects/ObjectViewer'
 import UserGuide, { hasAcceptedGuide } from './components/onboarding/UserGuide'
@@ -41,7 +56,25 @@ function ActivePage({ page }: { page: string }) {
     case 'calendar':     return <Calendar />
     case 'settings':     return <Settings />
     case 'assistant':    return <Assistant />
-    default:             return <Operations />
+
+    // AP-002 Milestone 4 sidebar
+    case 'sessions':              return <Sessions />
+    case 'drafts':                return <Drafts />
+    case 'commit-history':        return <CommitHistory />
+    case 'universal-objects':     return <UniversalObjects />
+    case 'knowledge-candidates':  return <KnowledgeCandidates />
+    case 'relationships':         return <Relationships />
+    case 'evidence':              return <Evidence />
+    case 'knowledge-graph':       return <Graph />
+    case 'timeline':              return <Timeline />
+    case 'reasoning':             return <Reasoning />
+    case 'conflicts-warnings':    return <ConflictsWarnings />
+    case 'suggested-corrections': return <SuggestedCorrections />
+    case 'users':                 return <Users />
+    case 'system-health':         return <SystemHealth />
+    case 'audit-log':             return <AuditLog />
+
+    default:             return <EngineeringWorkspace />
   }
 }
 

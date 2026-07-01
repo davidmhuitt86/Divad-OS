@@ -1,14 +1,4 @@
-const EKE_SERVICE_URL = process.env.EKE_SERVICE_URL ?? 'http://127.0.0.1:3000'
-
-export interface WorkspaceAnalysis {
-  knownObjects: unknown[]
-  candidateObjects: unknown[]
-  relationships: unknown[]
-  measurements: unknown[]
-  warnings: string[]
-  suggestedCorrections: unknown[]
-  confidence: number
-}
+import type { WorkspaceAnalysis } from '../../shared/types'
 
 export interface AnalyzeResult {
   success: boolean
@@ -17,9 +7,12 @@ export interface AnalyzeResult {
   error?: string
 }
 
-export async function analyzeWorkspaceText(workspaceId: string, text: string): Promise<AnalyzeResult> {
+// All REST communication with the EKE Service lives here — UI components
+// never call fetch directly. In dev, Vite proxies /api to eke-service
+// (see vite.config.ts) so this stays a same-origin relative call.
+export async function analyzeWorkspace(workspaceId: string, text: string): Promise<AnalyzeResult> {
   try {
-    const res = await fetch(`${EKE_SERVICE_URL}/api/v1/workspace/analyze`, {
+    const res = await fetch('/api/v1/workspace/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ workspaceId, text }),

@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import {
-  Home, LayoutDashboard, Cpu, FolderGit2, Brain, Box,
-  Briefcase, BarChart2, Calendar, Settings, Workflow,
+  Cpu, Workflow,
   Plus, FileText, GitBranch, ListChecks, Upload, Bot,
-  ChevronDown, Send, Loader2, ExternalLink,
+  ChevronDown, ChevronsLeft, ChevronsRight, Send, Loader2, ExternalLink,
   History, Share2, HelpCircle, ClipboardList, AlertTriangle, Wand2,
-  Users, Activity, ClipboardCheck,
+  Users, Activity, ClipboardCheck, Box, Settings,
 } from 'lucide-react'
 import { useStore } from '../../store'
 
@@ -13,7 +12,6 @@ interface NavItem {
   id: string
   label: string
   icon: React.ElementType
-  implemented: boolean
   dot?: 'live' | 'ai'
 }
 
@@ -23,59 +21,52 @@ interface NavSection {
   items: NavItem[]
 }
 
-// Navigation reorganized per AP-002 Milestone 4 sidebar redesign.
-// Existing working pages are folded into the closest-fitting section;
-// sections/items with no page built yet are marked implemented: false.
+// Sidebar exactly as specified for AP-002 Milestone 4. Engineering Workspace
+// is the default landing page; older pages (Dashboard/Operations/Architecture/
+// Repository/Objects/Reports/Calendar/Assistant) are intentionally not linked
+// here — their routes still exist in App.tsx but are reached only by state.
 const NAV_SECTIONS: NavSection[] = [
   {
     label: 'Workspace',
     items: [
-      { id: 'home',                  label: 'Dashboard',             icon: Home,       implemented: true },
-      { id: 'engineering-workspace', label: 'Engineering Workspace', icon: Workflow,   implemented: true, dot: 'live' },
-      { id: 'workspace',             label: 'Workspace',             icon: Briefcase,  implemented: true },
-      { id: 'calendar',              label: 'Calendar',              icon: Calendar,   implemented: true },
-      { id: 'sessions',              label: 'Sessions',              icon: History,    implemented: false },
-      { id: 'drafts',                label: 'Drafts',                icon: FileText,   implemented: false },
-      { id: 'commit-history',        label: 'Commit History',        icon: GitBranch,  implemented: false },
+      { id: 'engineering-workspace', label: 'Engineering Workspace', icon: Workflow,  dot: 'live' },
+      { id: 'sessions',              label: 'Sessions',              icon: History    },
+      { id: 'drafts',                label: 'Drafts',                icon: FileText   },
+      { id: 'commit-history',        label: 'Commit History',        icon: GitBranch  },
     ],
   },
   {
     label: 'Knowledge',
     items: [
-      { id: 'knowledge',            label: 'Knowledge',            icon: Brain,         implemented: true },
-      { id: 'objects',               label: 'Universal Objects',    icon: Box,           implemented: true },
-      { id: 'architecture',          label: 'Architecture',         icon: Cpu,           implemented: true },
-      { id: 'knowledge-candidates',  label: 'Knowledge Candidates', icon: HelpCircle,    implemented: false },
-      { id: 'relationships',         label: 'Relationships',        icon: Share2,        implemented: false },
-      { id: 'evidence',              label: 'Evidence',             icon: ClipboardList, implemented: false },
+      { id: 'universal-objects',    label: 'Universal Objects',    icon: Box            },
+      { id: 'knowledge-candidates', label: 'Knowledge Candidates', icon: HelpCircle     },
+      { id: 'relationships',        label: 'Relationships',        icon: Share2         },
+      { id: 'evidence',             label: 'Evidence',             icon: ClipboardList  },
     ],
   },
   {
     label: 'Visualization',
     items: [
-      { id: 'knowledge-graph', label: 'Knowledge Graph', icon: Share2,  implemented: false },
-      { id: 'timeline',        label: 'Timeline',        icon: History, implemented: false },
+      { id: 'knowledge-graph', label: 'Knowledge Graph', icon: Share2  },
+      { id: 'timeline',        label: 'Timeline',        icon: History },
     ],
   },
   {
     label: 'Analysis',
     badge: 'AI',
     items: [
-      { id: 'assistant',              label: 'Reasoning',              icon: Bot,           implemented: true, dot: 'ai' },
-      { id: 'reports',                label: 'Reports',                icon: BarChart2,     implemented: true },
-      { id: 'conflicts',              label: 'Conflicts / Warnings',   icon: AlertTriangle, implemented: false },
-      { id: 'suggested-corrections',  label: 'Suggested Corrections',  icon: Wand2,         implemented: false },
+      { id: 'reasoning',             label: 'Reasoning',             icon: Cpu,           dot: 'ai' },
+      { id: 'conflicts-warnings',    label: 'Conflicts / Warnings',  icon: AlertTriangle  },
+      { id: 'suggested-corrections', label: 'Suggested Corrections', icon: Wand2          },
     ],
   },
   {
     label: 'Administration',
     items: [
-      { id: 'settings',      label: 'Settings',      icon: Settings,        implemented: true },
-      { id: 'repository',    label: 'Repository',    icon: FolderGit2,      implemented: true },
-      { id: 'operations',    label: 'Operations',    icon: LayoutDashboard, implemented: true },
-      { id: 'users',         label: 'Users',         icon: Users,           implemented: false },
-      { id: 'system-health', label: 'System Health', icon: Activity,        implemented: false },
-      { id: 'audit-log',     label: 'Audit Log',     icon: ClipboardCheck,  implemented: false },
+      { id: 'users',         label: 'Users',         icon: Users          },
+      { id: 'settings',      label: 'Settings',      icon: Settings       },
+      { id: 'system-health', label: 'System Health', icon: Activity       },
+      { id: 'audit-log',     label: 'Audit Log',     icon: ClipboardCheck },
     ],
   },
 ]
@@ -91,8 +82,8 @@ const QUICK_ACTIONS = [
   { label: 'Upload File',      icon: Upload,     type: undefined            },
 ]
 
-function NavButton({ id, label, Icon, active, onClick, dot }: {
-  id: string; label: string; Icon: React.ElementType; active: boolean; onClick: () => void; dot?: 'live' | 'ai'
+function NavButton({ id, label, Icon, active, onClick, dot, collapsed }: {
+  id: string; label: string; Icon: React.ElementType; active: boolean; onClick: () => void; dot?: 'live' | 'ai'; collapsed?: boolean
 }) {
   const [hovered, setHovered] = useState(false)
   const bg     = active ? 'rgba(59,130,246,0.1)' : hovered ? '#1a1e28' : 'transparent'
@@ -103,26 +94,13 @@ function NavButton({ id, label, Icon, active, onClick, dot }: {
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '8px 14px', textAlign: 'left', border: 'none', cursor: 'pointer', fontSize: 12.5, background: bg, color, borderRight: border, transition: 'all 0.1s' }}
+      title={collapsed ? label : undefined}
+      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: collapsed ? '8px 0' : '8px 14px', justifyContent: collapsed ? 'center' : 'flex-start', textAlign: 'left', border: 'none', cursor: 'pointer', fontSize: 12.5, background: bg, color, borderRight: border, transition: 'all 0.1s' }}
     >
       <Icon size={14} />
-      <span style={{ flex: 1 }}>{label}</span>
-      {dot && <span style={{ width: 6, height: 6, borderRadius: '50%', background: DOT_COLOR[dot], boxShadow: `0 0 5px ${DOT_COLOR[dot]}aa`, flexShrink: 0 }} />}
+      {!collapsed && <span style={{ flex: 1 }}>{label}</span>}
+      {!collapsed && dot && <span style={{ width: 6, height: 6, borderRadius: '50%', background: DOT_COLOR[dot], boxShadow: `0 0 5px ${DOT_COLOR[dot]}aa`, flexShrink: 0 }} />}
     </button>
-  )
-}
-
-// Sub-item whose page hasn't been built yet — visible per the sidebar
-// redesign reference but inert until its page ships.
-function PlaceholderNavItem({ label, Icon }: { label: string; Icon: React.ElementType }) {
-  return (
-    <div
-      title="Coming soon"
-      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '8px 14px', fontSize: 12.5, color: '#3f4759', cursor: 'not-allowed' }}
-    >
-      <Icon size={14} />
-      <span>{label}</span>
-    </div>
   )
 }
 
@@ -258,58 +236,72 @@ function SidebarAIPanel({ onOpenFull }: { onOpenFull: () => void }) {
 
 export default function Sidebar() {
   const { activePage, setActivePage, openWizard } = useStore()
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <aside style={{ width: 208, display: 'flex', flexDirection: 'column', background: '#13161e', borderRight: '1px solid #1a1e28', flexShrink: 0, overflow: 'hidden' }}>
+    <aside style={{ width: collapsed ? 56 : 208, display: 'flex', flexDirection: 'column', background: '#13161e', borderRight: '1px solid #1a1e28', flexShrink: 0, overflow: 'hidden', transition: 'width 0.15s' }}>
 
       {/* Main nav */}
       <nav style={{ overflowY: 'auto', flex: 1 }}>
         <div style={{ padding: '2px 0 2px' }}>
           {NAV_SECTIONS.map((section, i) => (
             <div key={section.label} style={i > 0 ? { borderTop: '1px solid #1a1e2866', marginTop: 2 } : undefined}>
-              <SectionHeader label={section.label} badge={section.badge} />
-              {section.items.map(({ id, label, icon: Icon, implemented, dot }) => (
-                implemented
-                  ? <NavButton key={id} id={id} label={label} Icon={Icon} active={activePage === id} onClick={() => setActivePage(id)} dot={dot} />
-                  : <PlaceholderNavItem key={id} label={label} Icon={Icon} />
+              {!collapsed && <SectionHeader label={section.label} badge={section.badge} />}
+              {section.items.map(({ id, label, icon: Icon, dot }) => (
+                <NavButton key={id} id={id} label={label} Icon={Icon} active={activePage === id} onClick={() => setActivePage(id)} dot={dot} collapsed={collapsed} />
               ))}
             </div>
           ))}
         </div>
 
         {/* Quick Actions */}
-        <div style={{ borderTop: '1px solid #1a1e2866', marginTop: 4, paddingTop: 6 }}>
-          <div style={{ padding: '4px 14px 6px', fontSize: 9, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-            Quick Actions
+        {!collapsed && (
+          <div style={{ borderTop: '1px solid #1a1e2866', marginTop: 4, paddingTop: 6 }}>
+            <div style={{ padding: '4px 14px 6px', fontSize: 9, color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em' }}>
+              Quick Actions
+            </div>
+            {QUICK_ACTIONS.map(({ label, icon: Icon, type }) => (
+              <button
+                key={label}
+                onClick={() => { if (label === 'Upload File') return; openWizard(type) }}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', textAlign: 'left', border: 'none', cursor: 'pointer', fontSize: 11.5, background: 'transparent', color: '#64748b', transition: 'all 0.1s' }}
+                onMouseEnter={e => { const el = e.currentTarget; el.style.color = '#94a3b8'; el.style.background = '#1a1e28' }}
+                onMouseLeave={e => { const el = e.currentTarget; el.style.color = '#64748b'; el.style.background = 'transparent' }}
+              >
+                <Icon size={11} />
+                <span>{label}</span>
+              </button>
+            ))}
           </div>
-          {QUICK_ACTIONS.map(({ label, icon: Icon, type }) => (
-            <button
-              key={label}
-              onClick={() => { if (label === 'Upload File') return; openWizard(type) }}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', textAlign: 'left', border: 'none', cursor: 'pointer', fontSize: 11.5, background: 'transparent', color: '#64748b', transition: 'all 0.1s' }}
-              onMouseEnter={e => { const el = e.currentTarget; el.style.color = '#94a3b8'; el.style.background = '#1a1e28' }}
-              onMouseLeave={e => { const el = e.currentTarget; el.style.color = '#64748b'; el.style.background = 'transparent' }}
-            >
-              <Icon size={11} />
-              <span>{label}</span>
-            </button>
-          ))}
-        </div>
+        )}
       </nav>
 
       {/* Chief Engineer AI — persistent collapsible panel */}
-      <SidebarAIPanel onOpenFull={() => setActivePage('assistant')} />
+      {!collapsed && <SidebarAIPanel onOpenFull={() => setActivePage('reasoning')} />}
 
-      {/* Footer */}
-      <div style={{ borderTop: '1px solid #1a1e28', padding: '8px 14px', flexShrink: 0 }}>
-        <NavButton id="settings" label="Settings" Icon={Settings} active={activePage === 'settings'} onClick={() => setActivePage('settings')} />
-        <div style={{ marginTop: 8, paddingTop: 6, borderTop: '1px solid #1a1e2844' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e88' }} />
-            <span style={{ fontSize: 10, color: '#64748b' }}>All Systems Operational</span>
-          </div>
-          <div style={{ fontSize: 10, color: '#64748b', fontFamily: 'monospace' }}>v0.1.0-alpha</div>
-        </div>
+      {/* Footer: System Status + Collapse */}
+      <div style={{ borderTop: '1px solid #1a1e28', padding: collapsed ? '8px 0' : '8px 14px', flexShrink: 0 }}>
+        <button
+          onClick={() => setActivePage('system-health')}
+          title={collapsed ? 'System Status' : undefined}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 6, padding: collapsed ? '4px 0' : '4px 0', justifyContent: collapsed ? 'center' : 'flex-start', background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e88', flexShrink: 0 }} />
+          {!collapsed && (
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: 9, color: '#475569', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>System Status</div>
+              <div style={{ fontSize: 10, color: '#22c55e' }}>All Systems Operational</div>
+            </div>
+          )}
+        </button>
+        <button
+          onClick={() => setCollapsed(c => !c)}
+          title={collapsed ? 'Expand Sidebar' : undefined}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 6, justifyContent: collapsed ? 'center' : 'flex-start', padding: '7px 0 0', marginTop: 6, borderTop: '1px solid #1a1e2844', background: 'none', border: 'none', borderTopStyle: 'solid', cursor: 'pointer', color: '#64748b', fontSize: 10.5 }}
+        >
+          {collapsed ? <ChevronsRight size={12} /> : <ChevronsLeft size={12} />}
+          {!collapsed && <span>Collapse Sidebar</span>}
+        </button>
       </div>
     </aside>
   )

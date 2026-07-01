@@ -3,20 +3,46 @@ import { Upload, Clipboard, Trash2, FileDown, Save, CheckCircle2 } from 'lucide-
 import LiveAnalysisPanel from '../components/workspace/LiveAnalysisPanel'
 import KnowledgeGraphPreview from '../components/workspace/KnowledgeGraphPreview'
 import AIThinkingPanel from '../components/workspace/AIThinkingPanel'
+import { analyzeWorkspace } from '../services/workspaceApi'
 import type { WorkspaceAnalysis } from '../../shared/types'
 
 const DEBOUNCE_MS = 500
-const TEXT_EXTENSIONS = new Set(['txt', 'md', 'csv', 'log', 'json'])
+const TEXT_EXTENSIONS = new Set(['txt', 'md', 'csv', 'json', 'log'])
+const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg'])
+const DOCUMENT_EXTENSIONS = new Set(['pdf', 'docx'])
+const UPLOAD_ACCEPT = '.txt,.md,.csv,.json,.pdf,.docx,.png,.jpg,.jpeg'
+const FUTURE_MILESTONE = 'Available in a future milestone.'
+
+const STORAGE_KEY_TEXT = 'divad-os-workspace-text'
+const STORAGE_KEY_ID = 'divad-os-workspace-id'
 
 function makeSessionCode(id: string): string {
   return `WS-${id.replace(/-/g, '').slice(0, 6).toUpperCase()}`
 }
 
+function loadWorkspaceId(): string {
+  try {
+    const existing = localStorage.getItem(STORAGE_KEY_ID)
+    if (existing) return existing
+  } catch { /* ignore */ }
+  const id = crypto.randomUUID()
+  try { localStorage.setItem(STORAGE_KEY_ID, id) } catch { /* ignore */ }
+  return id
+}
+
+function loadStoredText(): string {
+  try { return localStorage.getItem(STORAGE_KEY_TEXT) ?? '' } catch { return '' }
+}
+
+function extOf(filename: string): string {
+  return filename.split('.').pop()?.toLowerCase() ?? ''
+}
+
 export default function EngineeringWorkspace() {
-  const workspaceId = useMemo(() => crypto.randomUUID(), [])
+  const workspaceId = useMemo(loadWorkspaceId, [])
   const sessionCode = useMemo(() => makeSessionCode(workspaceId), [workspaceId])
 
-  const [text, setText] = useState('')
+  const [text, setText] = useState(loadStoredText)
   const [analysis, setAnalysis] = useState<WorkspaceAnalysis | null>(null)
   const [loading, setLoading] = useState(false)
   const [hasRun, setHasRun] = useState(false)
@@ -26,12 +52,19 @@ export default function EngineeringWorkspace() {
   const [notice, setNotice] = useState<string | null>(null)
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Workspace contents survive refresh via local storage — nothing is sent
+  // to a database (out of scope for this milestone).
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY_TEXT, text) } catch { /* ignore */ }
+  }, [text])
 
   const runAnalysis = useCallback(async (value: string) => {
     setLoading(true)
     setError(null)
     try {
-      const result = await window.divadOS.workspace.analyze(workspaceId, value)
+      const result = await analyzeWorkspace(workspaceId, value)
       if (result.success && result.analysis) {
         setAnalysis(result.analysis)
         setLastAnalyzedAt(new Date().toLocaleTimeString())
@@ -58,33 +91,44 @@ export default function EngineeringWorkspace() {
 
   function showNotice(msg: string) {
     setNotice(msg)
-    setTimeout(() => setNotice(null), 2500)
+    setTimeout(() => setNotice(null), 3000)
   }
 
-  async function handleUpload() {
-    const picked = await window.divadOS.attachments.pick()
-    if (!picked.length) return
-    const file = picked[0]
-    if (!TEXT_EXTENSIONS.has(file.ext)) {
-      showNotice(`Unsupported file type: .${file.ext}`)
+  function loadFile(file: File) {
+    const ext = extOf(file.name)
+    if (TEXT_EXTENSIONS.has(ext)) {
+      const reader = new FileReader()
+      reader.onload = () => setText(String(reader.result ?? ''))
+      reader.onerror = () => showNotice(`Failed to read ${file.name}.`)
+      reader.readAsText(file)
       return
     }
-    const result = await window.divadOS.workspace.readTextFile(file.path)
-    if (result.success && result.content !== undefined) {
-      setText(result.content)
-    } else {
-      showNotice(result.error ?? 'Failed to read file.')
+    if (IMAGE_EXTENSIONS.has(ext)) {
+      showNotice('Image parsing not implemented yet.')
+      return
     }
+    if (DOCUMENT_EXTENSIONS.has(ext)) {
+      showNotice(`Document parsing not implemented yet (${ext.toUpperCase()}).`)
+      return
+    }
+    showNotice(`Unsupported file type: .${ext}`)
+  }
+
+  function handleUploadClick() {
+    fileInputRef.current?.click()
+  }
+
+  function handleFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) loadFile(file)
+    e.target.value = ''
   }
 
   function handleDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault()
     setDragOver(false)
     const file = e.dataTransfer.files[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => setText(String(reader.result ?? ''))
-    reader.readAsText(file)
+    if (file) loadFile(file)
   }
 
   async function handlePasteButton() {
@@ -108,6 +152,8 @@ export default function EngineeringWorkspace() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: '#0d0f14', padding: '14px 16px 16px', gap: 10 }}>
+      <input ref={fileInputRef} type="file" accept={UPLOAD_ACCEPT} onChange={handleFileInputChange} style={{ display: 'none' }} />
+
       {/* Page header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
         <div>
@@ -144,7 +190,7 @@ export default function EngineeringWorkspace() {
           <div style={{ padding: '9px 12px', borderBottom: '1px solid #1a1e28', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
             <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#475569' }}>Raw Engineering Input</span>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <button onClick={handleUpload} style={btnStyle('#3b82f6')}><Upload size={11} /> Upload</button>
+              <button onClick={handleUploadClick} style={btnStyle('#3b82f6')}><Upload size={11} /> Upload</button>
               <button onClick={handlePasteButton} style={btnStyle('#475569')}><Clipboard size={11} /> Paste</button>
               <button onClick={handleClear} style={btnStyle('#475569')}><Trash2 size={11} /> Clear</button>
             </div>
@@ -175,16 +221,19 @@ export default function EngineeringWorkspace() {
         <AIThinkingPanel loading={loading} hasRun={hasRun} />
       </div>
 
-      {/* Action bar */}
+      {/* Bottom command bar */}
       <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-        <button disabled style={actionBtnStyle('#22c55e', true)} title="Requires review and approval workflow (future milestone)">
+        <button disabled style={actionBtnStyle('#22c55e', true)} title={FUTURE_MILESTONE}>
           <CheckCircle2 size={13} /> Commit to EKE
         </button>
-        <button onClick={() => showNotice('Save Draft is not yet implemented.')} style={actionBtnStyle('#3b82f6', false)}>
+        <button disabled style={actionBtnStyle('#3b82f6', true)} title={FUTURE_MILESTONE}>
           <Save size={13} /> Save Draft
         </button>
-        <button onClick={() => showNotice('Export Session is not yet implemented.')} style={actionBtnStyle('#3b82f6', false)}>
+        <button disabled style={actionBtnStyle('#3b82f6', true)} title={FUTURE_MILESTONE}>
           <FileDown size={13} /> Export Session
+        </button>
+        <button onClick={handleUploadClick} style={actionBtnStyle('#3b82f6', false)}>
+          <Upload size={13} /> Upload File
         </button>
         <div style={{ flex: 1 }} />
         <button onClick={handleClear} style={actionBtnStyle('#ef4444', false)}>

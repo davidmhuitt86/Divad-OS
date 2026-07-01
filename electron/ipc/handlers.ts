@@ -11,7 +11,6 @@ import {
 } from '../db/queries.js'
 import { sendToAgent, initOpenAI } from '../agent/openai.js'
 import { testConnection, performSync } from '../github/sync.js'
-import { analyzeWorkspaceText } from '../workspace/client.js'
 
 export function registerHandlers(win: BrowserWindow, apiKey: string, assistantId: string) {
   initOpenAI(apiKey, assistantId)
@@ -110,17 +109,6 @@ export function registerHandlers(win: BrowserWindow, apiKey: string, assistantId
         ext:  path.extname(fp).toLowerCase().slice(1),
       }
     })
-  })
-
-  // ── Engineering Workspace ────────────────────────────────────────────────────
-  ipcMain.handle('workspace:analyze', async (_e, { workspaceId, text }) => analyzeWorkspaceText(workspaceId, text))
-
-  ipcMain.handle('workspace:read-text-file', async (_e, { filePath }) => {
-    try {
-      return { success: true, content: fs.readFileSync(filePath, 'utf-8') }
-    } catch (err) {
-      return { success: false, error: (err as Error).message }
-    }
   })
 
   ipcMain.handle('github:connect-test', async (_e, cfg) => testConnection(cfg))

@@ -124,7 +124,7 @@ export const useStore = create<Store>((set, get) => ({
     set({ searchResults: results })
   },
 
-  activePage: 'home',
+  activePage: 'engineering-workspace',
   setActivePage: (page) => set({ activePage: page }),
 
   objectTypeFilter: null,

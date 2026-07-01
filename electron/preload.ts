@@ -44,10 +44,6 @@ const api = {
     pick: (): Promise<{ name: string; path: string; size: number; ext: string }[]> =>
       ipcRenderer.invoke('attachments:pick'),
   },
-  workspace: {
-    analyze:      (workspaceId: string, text: string) => ipcRenderer.invoke('workspace:analyze', { workspaceId, text }),
-    readTextFile: (filePath: string) => ipcRenderer.invoke('workspace:read-text-file', { filePath }),
-  },
   export: {
     savePdf:  (args: unknown) => ipcRenderer.invoke('export:save-pdf', args),
     saveDocx: (args: unknown) => ipcRenderer.invoke('export:save-docx', args),
