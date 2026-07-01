@@ -118,6 +118,46 @@ export interface AppState {
   mission: string
 }
 
+// ─── Engineering Workspace (AP-002 Milestone 4) ────────────────────────────────
+
+export interface WorkspaceKnownObject {
+  id: string
+  objectNumber: string
+  name: string
+  description: string | null
+  version: string
+  matchedLine: string
+}
+
+export interface WorkspaceCandidateObject {
+  observedName: string
+  proposedType: string | null
+  confidence: number
+}
+
+export interface WorkspaceSuggestedCorrection {
+  observed: string
+  suggested: string
+  objectId: string
+}
+
+export interface WorkspaceAnalysis {
+  knownObjects: WorkspaceKnownObject[]
+  candidateObjects: WorkspaceCandidateObject[]
+  relationships: unknown[]
+  measurements: unknown[]
+  warnings: string[]
+  suggestedCorrections: WorkspaceSuggestedCorrection[]
+  confidence: number
+}
+
+export interface WorkspaceAnalyzeResult {
+  success: boolean
+  workspaceId?: string
+  analysis?: WorkspaceAnalysis
+  error?: string
+}
+
 export interface IpcChannels {
   'objects:list': { type?: ObjectType; status?: ObjectStatus }
   'objects:get': { id: string }

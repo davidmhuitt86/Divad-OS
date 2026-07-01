@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import {
   Home, LayoutDashboard, Cpu, FolderGit2, Brain, Box,
-  Briefcase, BarChart2, Calendar, Settings,
+  Briefcase, BarChart2, Calendar, Settings, Workflow,
   Plus, FileText, GitBranch, ListChecks, Upload, Bot,
   ChevronDown, Send, Loader2, ExternalLink,
 } from 'lucide-react'
@@ -15,6 +15,7 @@ const NAV = [
   { id: 'knowledge',    label: 'Knowledge',    icon: Brain           },
   { id: 'objects',      label: 'Objects',      icon: Box             },
   { id: 'workspace',    label: 'Workspace',    icon: Briefcase       },
+  { id: 'engineering-workspace', label: 'Engineering Workspace', icon: Workflow },
   { id: 'reports',      label: 'Reports',      icon: BarChart2       },
   { id: 'calendar',     label: 'Calendar',     icon: Calendar        },
 ]

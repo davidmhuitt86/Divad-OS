@@ -1,4 +1,4 @@
-import type { EKEObject, ActivityEvent, AgentMessage, AppState, Relationship, Attachment } from '../../shared/types'
+import type { EKEObject, ActivityEvent, AgentMessage, AppState, Relationship, Attachment, WorkspaceAnalyzeResult } from '../../shared/types'
 
 interface DivadOSApi {
   objects: {
@@ -29,6 +29,10 @@ interface DivadOSApi {
   }
   attachments: {
     pick: () => Promise<Attachment[]>
+  }
+  workspace: {
+    analyze:      (workspaceId: string, text: string) => Promise<WorkspaceAnalyzeResult>
+    readTextFile: (filePath: string) => Promise<{ success: boolean; content?: string; error?: string }>
   }
   export: {
     savePdf:  (args: ExportArgs & { html: string }) => Promise<ExportResult>

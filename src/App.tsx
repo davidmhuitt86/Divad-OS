@@ -8,6 +8,7 @@ import Repository from './pages/Repository'
 import Knowledge from './pages/Knowledge'
 import Objects from './pages/Objects'
 import Workspace from './pages/Workspace'
+import EngineeringWorkspace from './pages/EngineeringWorkspace'
 import Reports from './pages/Reports'
 import Calendar from './pages/Calendar'
 import Settings from './pages/Settings'
@@ -35,6 +36,7 @@ function ActivePage({ page }: { page: string }) {
     case 'knowledge':    return <Knowledge />
     case 'objects':      return <Objects />
     case 'workspace':    return <Workspace />
+    case 'engineering-workspace': return <EngineeringWorkspace />
     case 'reports':      return <Reports />
     case 'calendar':     return <Calendar />
     case 'settings':     return <Settings />
